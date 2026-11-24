@@ -107,6 +107,7 @@ const DIETS = ["anything","pescatarian","vegetarian","vegan","paleo","whole30","
     ok(!document.getElementById("removedmsg").hidden &&
        document.getElementById("removedmsg").textContent.includes(REMOVED.potatochips), "removed food not named");
     noteRemoved({});
+    ok(/aria-label="NOVA group 1, unprocessed/.test(novaTag(BY.oats)), "badge has no spoken label");
     // the calorie trim never removes a food the user kept
     profile = {sex: "male", age: 40, kcal: 2500};
     const seed = {oliveoil: 10, butter: 10, walnut: 200, peanut: 200, milk: 244};

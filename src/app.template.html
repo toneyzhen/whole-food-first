@@ -675,9 +675,10 @@ const renamed = k => Object.prototype.hasOwnProperty.call(RENAMED, k) ? RENAMED[
 // Ultra-processed foods (NOVA group 4) taken out, by key -> name (foods.json `removed`). A day that
 // used one still loads; the builder names what was left out instead of dropping it silently.
 const REMOVED = D.removed || {};
+const removedNames = p => p && typeof p === "object"
+  ? Object.keys(p).filter(k => Object.prototype.hasOwnProperty.call(REMOVED, k)).map(k => REMOVED[k]) : [];
 function noteRemoved(p){
-  const names = p && typeof p === "object"
-    ? Object.keys(p).filter(k => Object.prototype.hasOwnProperty.call(REMOVED, k)).map(k => REMOVED[k]) : [];
+  const names = removedNames(p);
   const el = document.getElementById("removedmsg");
   el.textContent = names.length ? "Left out of this day because they are ultra-processed (NOVA group 4) "
     + "and no longer in the app: " + names.join(", ") + "." : "";
@@ -686,9 +687,12 @@ function noteRemoved(p){
 // The NOVA group badge shown beside a food's name. Your own foods have none.
 const NOVA_LABEL = {1: "unprocessed or minimally processed", 2: "culinary ingredient (oil, butter, sugar, salt)",
   3: "processed (cheese, bread, canned, cured or salted food)"};
+// role="img" + aria-label so a screen reader says what the number means (title alone is often skipped)
 const novaTag = f => !f.nova ? "" : f.exc
-  ? `<span class="nova ex" title="Ultra-processed (NOVA group 4). ${esc(f.exc)}">exception</span>`
-  : `<span class="nova n${f.nova}" title="NOVA group ${f.nova}: ${NOVA_LABEL[f.nova]}">${f.nova}</span>`;
+  ? `<span class="nova ex" role="img" aria-label="Exception: ultra-processed, kept on purpose"
+      title="Ultra-processed (NOVA group 4). ${esc(f.exc)}">exception</span>`
+  : `<span class="nova n${f.nova}" role="img" aria-label="NOVA group ${f.nova}, ${NOVA_LABEL[f.nova]}"
+      title="NOVA group ${f.nova}: ${NOVA_LABEL[f.nova]}">${f.nova}</span>`;
 const knownOnly = p => { const out = {};
   if (p && typeof p === "object") for (const k0 in p){
     const k = renamed(k0);
@@ -1240,7 +1244,7 @@ document.getElementById("btn-gapsfirst").addEventListener("click", e => {
   e.currentTarget.setAttribute("aria-pressed", String(gapsFirst));
   renderCoverage();
 });
-document.getElementById("btn-clear").addEventListener("click", () => { plan = {}; renderPlan(); });
+document.getElementById("btn-clear").addEventListener("click", () => { plan = {}; noteRemoved({}); renderPlan(); });
 
 /* ---------------- suggestions ---------------- */
 function deficits(p, tg){
@@ -1663,7 +1667,7 @@ document.getElementById("btn-solve5").addEventListener("click", () => {
 document.getElementById("solveout").addEventListener("click", e => {
   const b = e.target.closest("[data-load]"); if (!b) return;
   plan = knownOnly(JSON.parse(b.dataset.load)); meals = {}; rowOrder = [];
-  renderPlan(); showTab("build");
+  noteRemoved({}); renderPlan(); showTab("build");
   window.scrollTo({top: 0, behavior: "smooth"});
 });
 
@@ -2004,8 +2008,10 @@ restoreFile.addEventListener("change", async () => {
     .concat(d.plan ? [{name: "Current day from backup " + String(d.exported || "").slice(0, 10), plan: d.plan, meals: d.meals, order: d.order}] : []);
   const seen = new Set(savedCache.map(s => s.name + JSON.stringify(knownOnly(s.plan))));
   let nDays = 0;
+  const left = new Set();   // ultra-processed foods the backup's days used, named in the message
   incoming.forEach((s, i) => {
     if (!s || typeof s !== "object") return;
+    removedNames(s.plan).forEach(n => left.add(n));
     const p = knownOnly(s.plan); if (!Object.keys(p).length) return;
     const name = String(s.name || "Restored day").slice(0, 60), sig = name + JSON.stringify(p);
     if (seen.has(sig)) return;
@@ -2014,8 +2020,10 @@ restoreFile.addEventListener("change", async () => {
       count: Object.keys(p).length});
   });
   renderSaved(savedCache); persistLocal();
-  msg(nDays || nFoods ? `Restored ${nDays} saved day${nDays === 1 ? "" : "s"} and ${nFoods} food${nFoods === 1 ? "" : "s"} of your own.`
-                      : "Nothing new in that file: everything in it is already here.");
+  const gone = left.size ? ` Left out because they are ultra-processed (NOVA group 4) and no longer in the app: ${
+    [...left].join(", ")}.` : "";
+  msg((nDays || nFoods ? `Restored ${nDays} saved day${nDays === 1 ? "" : "s"} and ${nFoods} food${nFoods === 1 ? "" : "s"} of your own.`
+      : left.size ? "Nothing restored." : "Nothing new in that file: everything in it is already here.") + gone);
 });
 
 /* ---------------- boot ---------------- */
@@ -2047,9 +2055,10 @@ if (shared){
   const brought = new Set((Array.isArray(shared.foods) ? shared.foods : []).map(normCustom).filter(Boolean).map(f => f.k));
   const n = Object.keys(shared.plan && typeof shared.plan === "object" ? shared.plan : {})
     .filter(k => Object.prototype.hasOwnProperty.call(BY, k) || brought.has(k)).length;
-  const box = document.getElementById("sharein");
+  const box = document.getElementById("sharein"), gone = removedNames(shared.plan);
   document.getElementById("shareintext").textContent = n
     ? `Someone shared a day with ${n} food${n === 1 ? "" : "s"}. Opening it replaces your current day; save yours first if you want to keep it.`
+    : gone.length ? `This link has a shared day, but its foods are ultra-processed (NOVA group 4) and no longer in the app: ${gone.join(", ")}.`
     : "This link has a shared day, but none of its foods could be read.";
   document.getElementById("sharein-open").hidden = !n;
   box.hidden = false;
