@@ -1,5 +1,5 @@
 <!doctype html><html><head><meta charset=utf8><meta name=viewport content="width=device-width,initial-scale=1"><style>:root{color-scheme:light}body{margin:0;padding:0;font:14px -apple-system,BlinkMacSystemFont,sans-serif;background:#faf9f5;color:#141413}img{max-width:100%}[hidden]:not([hidden=until-found i]){display:none!important}</style></head><body>
-<title>The Complete Day</title>
+<title>Whole Food First</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Archivo:wght@400;500;600;700&family=IBM+Plex+Mono:wght@400;500;600&family=Source+Serif+4:opsz,wght@8..60,400;8..60,600&display=swap">
@@ -241,6 +241,15 @@ details[open]>.cfsum{border-bottom:1px solid var(--rule)}
 .sugname{font-family:var(--display);font-size:14px;font-weight:600;color:var(--ink)}
 .sugwhy{font-size:12.5px;color:var(--muted);margin-top:2px;font-family:var(--display)}
 .tagrow{display:flex;flex-wrap:wrap;gap:4px;margin-top:5px}
+/* NOVA processing group beside a food name (see the key under the title) */
+.nova{display:inline-block;min-width:17px;margin-left:7px;padding:0 5px;border-radius:2px;
+  font:600 10.5px/17px var(--display);text-align:center;vertical-align:1px;letter-spacing:.02em}
+.nova.n1{background:var(--pine-soft);color:var(--pine)}
+.nova.n2{background:var(--sunk2);color:var(--body)}
+.nova.n3{background:var(--ochre-soft);color:var(--ochre)}
+.nova.ex{background:var(--rust-soft);color:var(--rust)}
+.novakey{font-size:13px;line-height:1.7;color:var(--muted);margin-top:8px}
+.novakey .nova{margin:0 2px 0 0}
 .tg{font-family:var(--display);font-size:10.5px;font-weight:600;padding:2px 6px;border-radius:2px;
   background:var(--pine-soft);color:var(--pine);letter-spacing:.02em}
 
@@ -304,9 +313,15 @@ footer b{color:var(--muted);font-weight:600}
 <header class="top">
   <div class="brandrow">
     <div class="brand">
-      <h1>The Complete Day</h1>
+      <h1>Whole Food First</h1>
       <p>Build a day of whole food and watch all 28 targets fill in. No supplements &mdash;
         every nutrient has to come from something you actually eat.</p>
+      <p class="novakey">Every food carries its processing level on the NOVA scale:
+        <span class="nova n1">1</span> unprocessed or minimally processed &middot;
+        <span class="nova n2">2</span> culinary ingredient (oil, butter, sugar, salt) &middot;
+        <span class="nova n3">3</span> processed (cheese, bread, canned, cured or salted food).
+        Ultra-processed foods (group 4) are left out, except two fortified plant milks marked
+        <span class="nova ex">exception</span>, kept as a vegan&rsquo;s food source of vitamin B12.</p>
     </div>
     <div class="profile">
       <div class="fld"><label for="sex">Sex</label>
@@ -352,6 +367,7 @@ footer b{color:var(--muted);font-weight:600}
       <p class="rowhint">Amounts are in <b>servings</b> &mdash; type decimals like
         <b>0.5</b> or <b>1.25</b>; the &minus; and + buttons step by one whole serving. Drag the <b>&#8942;&#8942;</b> handle to reorder
         or move a food to another meal (or focus it and use the arrow keys).</p>
+      <p class="rowhint" id="removedmsg" role="status" style="color:var(--rust)" hidden></p>
       <div id="planlist"></div>
       <div class="btnrow">
         <button class="btn ghost" id="btn-suggest">Fix my gaps</button>
@@ -552,8 +568,14 @@ footer b{color:var(--muted);font-weight:600}
   direction, so unlike every other trace in this database it is filled in for all __NFOODS__ foods
   from typical figures rather than left at zero. Salt added at the table is not counted unless
   you add it &mdash; the iodized-salt entry is there for that.
-  <b>Fortified foods</b> (the fortified plant milks and juices, iodized salt, enriched bread and
-  pasta) are marked as such and use the Nutrition Facts panel of one widely sold US product each,
+  <b>Processing levels</b> use the NOVA classification (Monteiro et al.), applied to each food as
+  it is typically sold in a US supermarket. USDA entries describe a food, not its ingredient list, so
+  a borderline food (bread, crackers, canned goods) is labeled by its common plain form; a bakery
+  loaf is group 3 even where many packaged loaves would be 4. Ultra-processed foods (group 4) are not
+  in the app, apart from two fortified plant milks kept on purpose as the food route to vitamin B12
+  on a vegan diet. Added vitamins alone don&rsquo;t move a food into group 4.
+  <b>Fortified foods</b> (the two fortified plant milks, fortified juices, iodized salt, enriched
+  bread and pasta) are marked as such and use the Nutrition Facts panel of one widely sold US product each,
   converted to per-100 g; brands differ, so check your own carton. Nutrients a label doesn&rsquo;t
   print are taken from the unfortified version or left at zero. To plan from unfortified food only,
   pick <b>Fortified foods</b> under &ldquo;Also avoid&rdquo; in Auto-solve.
@@ -650,6 +672,23 @@ const RENAMED = {milk1_nofort: "milk1", milk2_nofort: "milk2", skim_nofort: "ski
   alaskakingcrab: "crab", northernpike: "pike", salmon_farmed: "salmon", squid_fried: "squid",
   redchili_raw: "chilipepper", parsnip_cooked2: "parsnip", snowpea_raw: "snappea"};
 const renamed = k => Object.prototype.hasOwnProperty.call(RENAMED, k) ? RENAMED[k] : k;
+// Ultra-processed foods (NOVA group 4) taken out, by key -> name (foods.json `removed`). A day that
+// used one still loads; the builder names what was left out instead of dropping it silently.
+const REMOVED = D.removed || {};
+function noteRemoved(p){
+  const names = p && typeof p === "object"
+    ? Object.keys(p).filter(k => Object.prototype.hasOwnProperty.call(REMOVED, k)).map(k => REMOVED[k]) : [];
+  const el = document.getElementById("removedmsg");
+  el.textContent = names.length ? "Left out of this day because they are ultra-processed (NOVA group 4) "
+    + "and no longer in the app: " + names.join(", ") + "." : "";
+  el.hidden = !names.length;
+}
+// The NOVA group badge shown beside a food's name. Your own foods have none.
+const NOVA_LABEL = {1: "unprocessed or minimally processed", 2: "culinary ingredient (oil, butter, sugar, salt)",
+  3: "processed (cheese, bread, canned, cured or salted food)"};
+const novaTag = f => !f.nova ? "" : f.exc
+  ? `<span class="nova ex" title="Ultra-processed (NOVA group 4). ${esc(f.exc)}">exception</span>`
+  : `<span class="nova n${f.nova}" title="NOVA group ${f.nova}: ${NOVA_LABEL[f.nova]}">${f.nova}</span>`;
 const knownOnly = p => { const out = {};
   if (p && typeof p === "object") for (const k0 in p){
     const k = renamed(k0);
@@ -673,7 +712,7 @@ const MAXSERV = {iodizedsalt:3, brazil:2, liver:2, chickenliver:2, nori:5, oyste
   molasses:2, cocoa:3, oliveoil:3, wheatgerm:2, flax:3, chia:3, sesame:2, eggyolk:4,
   spinach:2, chard:2, beetgreens:2, kale:2, collards:2, bokchoy:2, cabbage:2,
   mushroom:2, uvmushroom:2,
-  porkliver:2, lambliver:1, beefkidney:2, caviar:2, eel:2, jerky:2, fishsauce:1, soysauce:1,
+  porkliver:2, lambliver:1, beefkidney:2, caviar:2, eel:2, fishsauce:1, soysauce:1,
   capers:2, pickle:2, amaranthleaf:2, ricebran:2, wheatbran:2, goji:2,
   cloves:1, cinnamon:2, turmeric:2, groundginger:2, basildried:2, sage:2, oregano:2,
   rosemary:2, cumin:2, paprika:2, cayenne:2, blackpepper:2, nutmeg:1, garlicpowder:2, onionpowder:2,
@@ -682,16 +721,13 @@ const MAXSERV = {iodizedsalt:3, brazil:2, liver:2, chickenliver:2, nori:5, oyste
   // USDA batch (1,500 foods): organ meats, oils and fats, spices, salty sauces
   bf_tripe:2, bf_brain:2, bf_lungs:2, bf_spleen:2, bf_thymus:2, bf_pancreas:2, tamari:2, almondoil:3, hazelnutoil:3, safflowerhioleic:3, palmoil:3, ricebranoil:3,
   cottonseedoil:3, wheatgermoil:3, codliveroil:1, turkeyfat:3, goosefat:3, baconfat:3,
-  margarine_tub:3, margarine_stick:3, margarine_light:3, butter_light:3, butter_margarine:3,
-  mayonnaise:2, mayo_light:2, mayo_olive:2, mayo_eggfree:2, ranch:2, italiandress:2,
-  sesamedress:2, coleslawdress:2, bbqsauce:2, tabasco:2, sriracha:2, salsa:2, salsaverde:2,
-  teriyaki:2, hoisin:2, worcestershire:2, enchiladasauce:2, cocktailsauce:1, sweetsoursauce:2,
-  plumsauce:2, peanutsauce:2, steaksauce:2, wasabi:2, allspice:2, bayleaf:2, cardamom:2,
+  tabasco:2, sriracha:2, salsa:2, salsaverde:2,
+  worcestershire:2, enchiladasauce:2, wasabi:2, allspice:2, bayleaf:2, cardamom:2,
   chilipowder:2, currypowder:2, fennelseed:2, marjoram:2, tarragon:2, caraway2:2, mustardseed:2,
-  mustardoil:3, poppyseedoil:3, tomatochilisauce:2, celeryseed:2, saffron:2, poultryseasoning:2,
+  mustardoil:3, poppyseedoil:3, celeryseed:2, saffron:2, poultryseasoning:2,
   salmonoil:1, whitepepper:2, corianderseed:2, dillseed:2, fenugreek:2, mace:2,
   aniseseed:2, pumpkinpiespice:2, savory:2, saltpork:2, lambheart:2, lambkidney:2, lambtongue:2,
-  turkeyliver:2, turkeyheart:2, liverwurst:2, pate_chickenliver:2, turkeygizzard:2,
+  turkeyliver:2, turkeyheart:2, turkeygizzard:2,
   roe_cooked:2, roe_raw:2, beefheart:2, beeftongue:2, gizzard:2, chickenheart:2, sunfloweroil_linoleic:3};
 const SEASONING = new Set(["iodizedsalt"]);
 const countFoods = p => Object.keys(p).filter(k => !SEASONING.has(k)).length;
@@ -714,7 +750,7 @@ const ORDINARY = new Set(["potato","sweetpot","oats","egg","milk","yogurt","ched
   "beef","salmon","tuna","sardine","spinach","broccoli","carrot","banana","orange","tomato",
   "brownrice","wwbread","lentil","chickpea","blackbean","almond","walnut","peanut","peas",
   "redpepper","cauliflower","mushroom","strawberry","blueberry","avocado","turkey","pork",
-  "soymilk_f","almondmilk_f","oatmilk_f","oj_f"]);
+  "soymilk_f","almondmilk_f","oj_f"]);
 
 let profile = {sex:"male", age:40, kcal:2500};
 let plan = {};              // foodKey -> grams
@@ -1037,7 +1073,7 @@ function renderPlan(){
       return `<div class="prow" data-k="${k}" data-m="${i}">
         <button class="grip" data-grip="${k}@${i}" title="Drag to reorder"
           aria-label="Move ${f.name}, now in ${MEALS[i]}. Use the up and down arrow keys to move it.">${GRIP}</button>
-        <span><span class="pname">${f.name}</span>
+        <span><span class="pname">${f.name}</span>${novaTag(f)}
           <span class="pmeta">1 serving = ${f.sl} (${+f.serv.toFixed(1)} g) · ${Math.round(g)} g ·
             ${Math.round(f.n[IDX.kcal]*g/100)} kcal</span></span>
         <span style="display:flex;align-items:center;gap:7px">
@@ -1072,7 +1108,7 @@ function runSearch(){
   cursor = hits.length ? 0 : -1;
   results.innerHTML = hits.length
     ? hits.map((f,i) => `<button class="res${i === 0 ? " cursor" : ""}" data-add="${f.k}"
-        role="option" aria-selected="${i === 0}" id="res-${i}"><span>${f.name}</span>
+        role="option" aria-selected="${i === 0}" id="res-${i}"><span>${f.name}${novaTag(f)}</span>
         <small>${f.cat} &middot; ${f.sl}</small></button>`).join("")
     : `<p class="empty">No food matches &ldquo;${esc(q)}&rdquo;.</p>`;
   results.hidden = false;
@@ -1565,7 +1601,7 @@ function planCard(p, i, opts){
       const mk = keys.filter(k => m[k][mi] > 0);   // a solved day puts each food in one meal
       return mk.length ? mealHeader(mi, mk.reduce((a, k) => a + kcalOf(k, p[k]), 0), false)
         + mk.map(k => `<div class="prow"><span>
-      <span class="pname">${BY[k].name}</span>
+      <span class="pname">${BY[k].name}</span>${novaTag(BY[k])}
       <span class="pmeta">${p[k]} g &middot; ${(p[k]/BY[k].serv).toFixed(1)} × ${BY[k].sl}</span>
       </span><span class="mono" style="font-size:12.5px;color:var(--muted)">${
         Math.round(BY[k].n[IDX.kcal]*p[k]/100)} kcal</span></div>`).join("") : "";
@@ -1700,7 +1736,7 @@ function renderBrowse(){
     <th>Serving</th><th>${META[n].label} ${basisLabel} (${unit})</th>
     <th>% of your target</th><th>kcal</th><th></th></tr>`;
   document.querySelector("#brtable tbody").innerHTML = rows.map(r => `<tr>
-    <td>${r.f.name}</td><td class="cat">${r.f.cat}</td>
+    <td>${r.f.name}${novaTag(r.f)}</td><td class="cat">${r.f.cat}</td>
     <td>${r.f.sl}</td>
     <td>${r.v >= 100 ? Math.round(r.v) : r.v >= 1 ? r.v.toFixed(1) : r.v.toFixed(2)}</td>
     <td style="color:${r.pct>=50?"var(--pine)":"inherit"};font-weight:${r.pct>=50?600:400}">${
@@ -1750,6 +1786,7 @@ function restoreLocal(){
   try {
     const s = JSON.parse(localStorage.getItem("completeday") || "null");
     if (s && s.plan){ plan = knownOnly(s.plan); meals = cleanMeals(s.meals); rowOrder = cleanOrder(s.rowOrder);
+      noteRemoved(s.plan);
       if (MEALS[s.addMeal]) addMeal = s.addMeal;
       if (s.profile) profile = s.profile;
       if (s.avoid) avoid = new Set(s.avoid);
@@ -1816,7 +1853,8 @@ document.getElementById("savedlist").addEventListener("click", async e => {
   const o = e.target.closest("[data-open]"), d = e.target.closest("[data-drop]");
   if (o){
     const s = savedCache.find(x => x.id === o.dataset.open);
-    if (s){ plan = knownOnly(s.plan); meals = cleanMeals(s.meals); rowOrder = cleanOrder(s.order); renderPlan(); }
+    if (s){ plan = knownOnly(s.plan); meals = cleanMeals(s.meals); rowOrder = cleanOrder(s.order);
+      noteRemoved(s.plan); renderPlan(); }
   } else if (d){
     const id = d.dataset.drop;
     if (DB && !id.startsWith("local-")){ try { await DB.doc("plans/" + id).delete(); } catch (e) {} }
@@ -1946,7 +1984,7 @@ document.getElementById("btn-backup").addEventListener("click", () => {
     saved: savedCache.map(({id, count, ...s}) => s), foods: customFoods().map(foodRecord)};
   const url = URL.createObjectURL(new Blob([JSON.stringify(data, null, 1)], {type: "application/json"}));
   const a = document.createElement("a");
-  a.href = url; a.download = `complete-day-backup-${new Date().toISOString().slice(0, 10)}.json`;
+  a.href = url; a.download = `whole-food-first-backup-${new Date().toISOString().slice(0, 10)}.json`;
   document.body.appendChild(a); a.click(); a.remove();
   setTimeout(() => URL.revokeObjectURL(url), 1000);
 });
@@ -1958,7 +1996,8 @@ restoreFile.addEventListener("change", async () => {
   if (!file) return;
   if (file.size > 2e6) return msg("That file is too large to be a backup from this app.");
   let d; try { d = JSON.parse(await file.text()); } catch (e) { d = null; }
-  if (!d || d.app !== "the-complete-day") return msg("That isn't a backup file from The Complete Day.");
+  // the app id stays "the-complete-day" (the old name), so backups from before the rename still restore
+  if (!d || d.app !== "the-complete-day") return msg("That isn't a backup file from Whole Food First.");
   const nFoods = importFoods(d.foods);   // first, so saved days that use them survive knownOnly
   // Restoring adds; it never overwrites. The backup's current day comes back as a saved day.
   const incoming = (Array.isArray(d.saved) ? d.saved.slice(0, 500) : [])
@@ -2017,7 +2056,7 @@ if (shared){
   document.getElementById("sharein-open").addEventListener("click", () => {
     importFoods(shared.foods);
     plan = knownOnly(shared.plan); meals = cleanMeals(shared.meals); rowOrder = cleanOrder(shared.order);
-    renderPlan(); box.hidden = true; dropHash();
+    noteRemoved(shared.plan); renderPlan(); box.hidden = true; dropHash();
   });
   document.getElementById("sharein-ignore").addEventListener("click", () => { box.hidden = true; dropHash(); });
 }

@@ -1,4 +1,8 @@
-# CLAUDE.md — working on The Complete Day
+# CLAUDE.md — working on Whole Food First
+
+The app was called The Complete Day until 2026-11. The repo name, the Pages URL, the
+`localStorage` keys (`completeday`, `completeday-foods`) and the backup id (`the-complete-day`)
+keep the old name on purpose: changing them would break links and wipe saved data.
 
 Context for Claude Code sessions. Read README.md for what the app does; this file covers how to
 change it without breaking its rules.
@@ -9,9 +13,11 @@ change it without breaking its rules.
 - `data/foods.json` — the database: `order` (32 nutrient keys), `meta` (labels/units/notes),
   `foods` (each: `k` key, `name`, `cat`, `cls` plant|dairy|egg|fish|meat, `serv` grams per
   serving, `sl` serving label, `tags` space-separated, `raw` 0|1, `n` values in `order`, per
-  100 g, `common` 1 for an everyday food or 0 for an uncommon one, and `fdc`, the USDA
-  FoodData Central ID, wherever the values came from one SR Legacy entry), `dri` targets by
-  `sex:age`, `ul` upper limits, `softUl` advisory limits. No two foods may share an `fdc`:
+  100 g, `common` 1 for an everyday food or 0 for an uncommon one, `nova` its NOVA processing
+  group 1-3, `exc` the stated reason on a group-4 food kept on purpose, and `fdc`, the USDA
+  FoodData Central ID, wherever the values came from one SR Legacy entry), `removed` (key ->
+  name of the ultra-processed foods taken out), `dri` targets by `sex:age`, `ul` upper limits,
+  `softUl` advisory limits. No two foods may share an `fdc`:
   that is how duplicates of a hand-corrected older food were caught.
 - `index.html` — generated. Never edit it by hand; edit src/ or data/ and rebuild. Commit it
   (it is what users open and what GitHub Pages would serve).
@@ -22,7 +28,7 @@ python3 scripts/validate.py && python3 build.py && node tests/smoke.js
 ```
 The smoke test needs Playwright (CI installs it; see `.github/workflows/ci.yml`). Calories count
 toward the 28, as in the builder. Expected results at 14 foods: 28/28 at 100–102% kcal using 8–12
-foods for every pattern except carnivore (~24: no route to fiber, and it leans on organ meats),
+foods for every pattern except carnivore (~21: no route to fiber, and it leans on organ meats),
 and at most one uncommon food in each of those days (carnivore excepted). Any `OVER` line, or calories
 above 105%, fails. It also sweeps every bias ×
 pattern at 14 and 7 foods for three profiles and fails on any upper-limit breach, any portion past
@@ -44,6 +50,12 @@ inherited names like `toString` from share links), the share-link encoding and m
 - Tags drive diet rules and exclusions: dairy egg gluten peanut treenut soy fish shellfish sesame
   nightshade legume grain redmeat organ addedsugar fortified. Coconut is tagged treenut (FDA).
   Anything fortified or enriched gets `fortified`.
+- **Whole and minimally processed food only.** Every food has a NOVA group: 1 unprocessed or
+  minimally processed, 2 processed culinary ingredient, 3 processed. Don't add ultra-processed
+  foods (group 4). The only group-4 foods are the fortified soy and almond milks, kept as the
+  vegan food route to B12, each with its reason in `exc`; add another only with a nutrient a
+  pattern can't reach otherwise, and say so in `exc`. Label a food as typically sold in a US
+  supermarket; plain breads are 3; added vitamins alone don't make a food 4.
 - Potent foods get a serving cap in `MAXSERV` in the template (livers, salt, spices, oils…);
   everything else is capped by category in `CAT_MAXSERV` (about two servings).
 - When adding foods, cite where the numbers came from in the commit message. When checking data,
@@ -68,8 +80,9 @@ inherited names like `toString` from share links), the share-link encoding and m
   since food names are interpolated into HTML everywhere. Any plan loaded from storage goes
   through `knownOnly`, because it may name a custom food this browser doesn't have.
 - Food keys are permanent: saved days, share links and backups refer to them. To remove a food,
-  map its key to its replacement in `RENAMED`; `knownOnly`, `cleanMeals` and `cleanOrder` follow
-  it, and the smoke test checks every target exists.
+  either map its key to its replacement in `RENAMED` (`knownOnly`, `cleanMeals` and `cleanOrder`
+  follow it, and the smoke test checks every target exists), or, when nothing replaces it, list it
+  under `removed` in foods.json so a day that used it names what was left out (`noteRemoved`).
 - Share links (`#day=` + base64url JSON) and backup files are untrusted: they only enter through
   `importFoods` (normCustom), `knownOnly` and `cleanMeals`. A shared day never replaces the
   current one without the user pressing "Open it"; a restore only ever adds.

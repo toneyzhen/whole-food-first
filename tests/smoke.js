@@ -101,6 +101,12 @@ const DIETS = ["anything","pescatarian","vegetarian","vegan","paleo","whole30","
     ok(JSON.stringify(knownOnly({salmon_farmed: 85, salmon: 50})) === JSON.stringify({salmon: 135}), "renamed key in a plan");
     ok(JSON.stringify(cleanMeals({salmon_farmed: {1: 85}})) === JSON.stringify({salmon: {1: 85}}), "renamed key in meals");
     ok(cleanOrder(["salmon_farmed@1", "salmon@1"]).join() === "salmon@1", "renamed key in row order");
+    // ultra-processed foods (NOVA 4) are out; a day that used one loads and names what was left out
+    ok(FOODS.every(f => f.custom || [1, 2, 3].includes(f.nova) || (f.nova === 4 && f.exc)), "NOVA group 4 food without an exception");
+    noteRemoved({oats: 40, potatochips: 28});
+    ok(!document.getElementById("removedmsg").hidden &&
+       document.getElementById("removedmsg").textContent.includes(REMOVED.potatochips), "removed food not named");
+    noteRemoved({});
     // the calorie trim never removes a food the user kept
     profile = {sex: "male", age: 40, kcal: 2500};
     const seed = {oliveoil: 10, butter: 10, walnut: 200, peanut: 200, milk: 244};

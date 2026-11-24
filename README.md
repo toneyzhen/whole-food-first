@@ -1,18 +1,35 @@
-# The Complete Day
+# Whole Food First
 
-A single-page planner for building a day of food that meets the US Dietary Reference Intakes —
-all 28 targets — and seeing exactly where each nutrient comes from.
+A single-page planner for building a day of whole and minimally processed food that meets the
+US Dietary Reference Intakes (all 28 targets) and seeing exactly where each nutrient comes from.
+(Formerly The Complete Day.)
 
 **Use it:** https://toneyzhen.github.io/the-complete-day/ — or open `index.html` in a browser.
 No install, no server, no account.
 
 ## What it does
 
-**Build a day.** Search 1,500 foods, add them by the serving (decimals allowed — 0.5 serving,
+**Build a day.** Search 1,330 foods, add them by the serving (decimals allowed — 0.5 serving,
 1.25 servings), and drag to reorder. The day is split into breakfast, lunch, dinner and snacks,
 with calories per meal; drag a food (or use the arrow keys) to move it between meals. The same
 food can appear in more than one meal: pick the meal next to the search box and add it again. A coverage
 panel shows every target as a bar, with gaps and upper-limit breaches highlighted.
+
+**Processing levels.** Every food carries its NOVA group, the standard research classification
+of how processed a food is, as a badge beside its name:
+
+| Badge | NOVA group | Examples |
+|---|---|---|
+| **1** | Unprocessed or minimally processed | fresh, frozen or dried produce; meat, fish, eggs; milk and plain yogurt; oats, rice, beans, nuts |
+| **2** | Processed culinary ingredient | oils, butter, ghee, sugar, honey, salt |
+| **3** | Processed | cheese, plain bread, canned or salted foods, cured meats, tofu |
+| **exception** | Ultra-processed, kept on purpose | fortified soy milk and fortified almond milk |
+
+Ultra-processed foods (NOVA group 4: soft drinks, chips, sweetened cereals, deli meats and
+sausages, margarine, bottled dressings, flavored yogurts, most plant milks) are not in the app.
+The two **exceptions** stay because, on a vegan diet, a fortified plant milk is the only food
+source of vitamin B12; almond milk is there for vegans who avoid soy. A day saved before group 4
+was removed still opens, and the builder names what was left out.
 
 **Nutrient explainers.** The **i** beside each nutrient explains what it does and why it
 matters, lists which foods in your day supply it (amount and share), and offers the richest
@@ -34,7 +51,7 @@ Portions stay realistic: at most about two servings of any one food (less for po
 liver or spices) and at most two meat or fish mains a day, one for lunch and one for dinner
 (carnivore excepted). It avoids spending most of what's left under any limit on one food, so a
 heavily fortified cereal can't use up the iron room that later foods need; under a carb cap the
-same applies to the carb budget. It prefers everyday foods: about 600 of the 1,500 are marked
+same applies to the carb budget. It prefers everyday foods: about 560 of the 1,330 are marked
 uncommon (game meats, most organ meats, exotic fruit, specialty oils), and those only win when
 they close much more of a gap, so a default day reads like an ordinary shopping list.
 
@@ -77,22 +94,27 @@ Calories are set by you. Some deliberate choices:
 
 ## The data
 
-`data/foods.json` holds 1,500 foods with 32 values each, per 100 g of the food as named
-(e.g. "Lentils, cooked" means boiled, unsalted). 1,365 of them carry their USDA FoodData
+`data/foods.json` holds 1,330 foods with 32 values each, per 100 g of the food as named
+(e.g. "Lentils, cooked" means boiled, unsalted). 1,207 of them carry their USDA FoodData
 Central ID in an `fdc` field; the rest came from labels or other tables, or were corrected by hand
 far enough from the USDA entry that the ID would mislead. Each food also says whether it is an
-everyday food (`common`).
+everyday food (`common`) and its NOVA group (`nova`, with the reason in `exc` for the two kept
+exceptions). The 170 ultra-processed foods taken out are listed by name under `removed`.
 
 - **Sources:** USDA FoodData Central (SR Legacy first) for whole foods; the USDA/FDA/ODS
   Iodine Database for iodine; the Japanese Standard Tables of Food Composition for toasted
   nori; product Nutrition Facts panels for fortified drinks (one widely sold US product
   each, so check your own carton).
-- **The 986 foods added in the expansion to 1,500** come straight from SR Legacy by ID: agents
+- **NOVA groups** were assigned by Sonnet subagents from the official definitions plus written
+  rules for what USDA names leave open (a food is labeled as typically sold in a US supermarket;
+  plain breads are group 3 because a simple bakery loaf is easy to buy; added vitamins alone don't
+  make a food group 4), then reviewed by hand. They are judgment calls on generic entries.
+- **The 986 foods added in the expansion to 1,500** (before group 4 was removed) come straight from SR Legacy by ID: agents
   chose the foods and wrote names, servings and tags, and a script copied the numbers. SR Legacy
   has no molybdenum, so that reads 0 for these foods. Mixed animal foods with fiber (flavored yogurt, egg noodles,
   creamy dressings) were left out, because the validator rejects fiber in animal foods.
 - **Iodine** comes from the USDA, FDA and ODS-NIH Iodine Database, Release 4.0 (2024): by its own
-  SR Legacy link where it has one, otherwise matched by name to the same food and form. 331 foods
+  SR Legacy link where it has one, otherwise matched by name to the same food and form. 293 foods
   have an iodine value; the rest read 0, which mostly matters for foods it never measured. The
   database row behind each value is in `data/audit/iodine_r4.json`.
 - **Unknown trace values are recorded as 0**, not guessed. The app under-credits rather than
@@ -138,7 +160,8 @@ GitHub Actions runs all three on every push and pull request, and fails if the c
   fewer it rarely closes every target, and calories can stay under target.
 - A few days still can't meet every nutrient within the calorie target from the allowed foods,
   mostly at low targets (1,400–1,600 kcal). About 2% of a 2,880-day test sweep lands above 105%.
-- Carnivore reaches 27/28: no animal food has fiber.
+- Carnivore reaches about 21/28: no animal food has fiber, and without liverwurst and pâté its
+  vitamin A and K come up short.
 - A saved day that uses one of your own foods loses that food when opened in another browser,
   unless it arrives through a share link or a backup file.
 

@@ -7,6 +7,7 @@
 - vitamin B12 not in unfortified plant foods (tempeh and miso carry traces)
 - no negative values; sodium present for every food that has calories
 - every food says whether it is an everyday food (common 0|1); no USDA entry (fdc) used twice
+- every food has a NOVA group 1-3 (4 only as a stated exception); removed keys aren't live foods
 """
 import json, pathlib, sys
 
@@ -25,6 +26,10 @@ for f in d["foods"]:
     if not f["serv"] > 0: errs.append(f"{k}: serving must be over 0 g")
     if f["raw"] not in (0, 1): errs.append(f"{k}: raw must be 0 or 1")
     if f.get("common") not in (0, 1): errs.append(f"{k}: common (everyday food) must be 0 or 1")
+    # NOVA: 1 unprocessed/minimally processed, 2 culinary ingredient, 3 processed. Group 4
+    # (ultra-processed) is left out; the few kept on purpose say why in `exc`.
+    if f.get("nova") not in (1, 2, 3) and not (f.get("nova") == 4 and f.get("exc")):
+        errs.append(f"{k}: nova must be 1, 2 or 3 (4 only as an exception with a reason in exc)")
     if len(f["n"]) != len(O): errs.append(f"{k}: expected {len(O)} values")
     if any(v < 0 for v in f["n"]): errs.append(f"{k}: negative value")
     if n["fiber"] > n["carb"] + 1e-9: errs.append(f"{k}: fiber > carbohydrate")
@@ -38,5 +43,7 @@ keys = [f["k"] for f in d["foods"]]
 if len(keys) != len(set(keys)): errs.append("duplicate food keys")
 fdcs = [f["fdc"] for f in d["foods"] if "fdc" in f]
 for x in {x for x in fdcs if fdcs.count(x) > 1}: errs.append(f"USDA entry {x} used by more than one food")
+# `removed` names foods taken out (old saved days are told what was left out); none may still be live
+for k in set(d.get("removed", {})) & set(keys): errs.append(f"{k}: listed in removed but still a food")
 print("\n".join(errs) or f"OK: {len(d['foods'])} foods pass all checks")
 sys.exit(1 if errs else 0)
