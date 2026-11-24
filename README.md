@@ -9,7 +9,7 @@ No install, no server, no account.
 
 ## What it does
 
-**Build a day.** Search 1,652 foods, add them by the serving (decimals allowed — 0.5 serving,
+**Build a day.** Search 1,651 foods, add them by the serving (decimals allowed — 0.5 serving,
 1.25 servings), and drag to reorder. The day is split into breakfast, lunch, dinner and snacks,
 with calories per meal; drag a food (or use the arrow keys) to move it between meals. The same
 food can appear in more than one meal: pick the meal next to the search box and add it again. A coverage
@@ -51,7 +51,7 @@ Portions stay realistic: at most about two servings of any one food (less for po
 liver or spices) and at most two meat or fish mains a day, one for lunch and one for dinner
 (carnivore excepted). It avoids spending most of what's left under any limit on one food, so a
 heavily fortified cereal can't use up the iron room that later foods need; under a carb cap the
-same applies to the carb budget. It prefers everyday foods: about 800 of the 1,652 are marked
+same applies to the carb budget. It prefers everyday foods: about 800 of the 1,651 are marked
 uncommon (game meats, most organ meats, exotic fruit, specialty oils), and those only win when
 they close much more of a gap, so a default day reads like an ordinary shopping list.
 
@@ -94,8 +94,8 @@ Calories are set by you. Some deliberate choices:
 
 ## The data
 
-`data/foods.json` holds 1,652 foods with 32 values each, per 100 g of the food as named
-(e.g. "Lentils, cooked" means boiled, unsalted). 1,529 of them carry their USDA FoodData
+`data/foods.json` holds 1,651 foods with 32 values each, per 100 g of the food as named
+(e.g. "Lentils, cooked" means boiled, unsalted). 1,528 of them carry their USDA FoodData
 Central ID in an `fdc` field; the rest came from labels or other tables, or were corrected by hand
 far enough from the USDA entry that the ID would mislead. Each food also says whether it is an
 everyday food (`common`) and its NOVA group (`nova`, with the reason in `exc` for the two kept
@@ -109,7 +109,7 @@ exceptions). The 170 ultra-processed foods taken out are listed by name under `r
   rules for what USDA names leave open (a food is labeled as typically sold in a US supermarket;
   plain breads are group 3 because a simple bakery loaf is easy to buy; added vitamins alone don't
   make a food group 4), then reviewed by hand. They are judgment calls on generic entries.
-- **The 986 foods added in the expansion to 1,500** (before group 4 was removed) and the 322 whole foods added after it come straight from SR Legacy by ID: agents
+- **The 986 foods added in the expansion to 1,500** (before group 4 was removed) and the 321 whole foods added after it come straight from SR Legacy by ID: agents
   chose the foods and wrote names, servings and tags, and a script copied the numbers. SR Legacy
   has no molybdenum, so that reads 0 for these foods. Mixed animal foods with fiber (flavored yogurt, egg noodles,
   creamy dressings) were left out, because the validator rejects fiber in animal foods.
