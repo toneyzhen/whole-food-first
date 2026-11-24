@@ -732,7 +732,14 @@ const MAXSERV = {iodizedsalt:3, brazil:2, liver:2, chickenliver:2, nori:5, oyste
   salmonoil:1, whitepepper:2, corianderseed:2, dillseed:2, fenugreek:2, mace:2,
   aniseseed:2, pumpkinpiespice:2, savory:2, saltpork:2, lambheart:2, lambkidney:2, lambtongue:2,
   turkeyliver:2, turkeyheart:2, turkeygizzard:2,
-  roe_cooked:2, roe_raw:2, beefheart:2, beeftongue:2, gizzard:2, chickenheart:2, sunfloweroil_linoleic:3};
+  roe_cooked:2, roe_raw:2, beefheart:2, beeftongue:2, gizzard:2, chickenheart:2, sunfloweroil_linoleic:3,
+  // round 3 (whole-food additions): organ meats, oils, fish oils, dried herbs, salt
+  herringoil:1, sardineoil:1, menhadenoil:1, cocoabutter:3, apricotkerneloil:3, palmkerneloil:3,
+  safflowerlinoleic:3, oatoil:3, babassuoil:3, teaseedoil:3, orangepeel:2, lemonpeel:2,
+  porkheart_braised:2, porkkidney_braised:2, chitterlings_simm:2, porkstomach_simm:2,
+  lambbrain_fried:2, lambsweetbread:2, vealliver_braised:2, vealthymus_braised:2,
+  lambtestes_fried:2, spearmint_dried:2, chervil_dried:2, corianderleaf_dried:2,
+  dillweed_dried:2, parsley_dried:2, chgiblets_simmered:2, duckliver_raw:2};
 const SEASONING = new Set(["iodizedsalt"]);
 const countFoods = p => Object.keys(p).filter(k => !SEASONING.has(k)).length;
 const DEFAULT_MAXSERV = 3;

@@ -28,7 +28,7 @@ python3 scripts/validate.py && python3 build.py && node tests/smoke.js
 ```
 The smoke test needs Playwright (CI installs it; see `.github/workflows/ci.yml`). Calories count
 toward the 28, as in the builder. Expected results at 14 foods: 28/28 at 100–102% kcal using 8–12
-foods for every pattern except carnivore (~21: no route to fiber, and it leans on organ meats),
+foods for every pattern except carnivore (~22: no route to fiber, and it leans on organ meats),
 and at most one uncommon food in each of those days (carnivore excepted). Any `OVER` line, or calories
 above 105%, fails. It also sweeps every bias ×
 pattern at 14 and 7 foods for three profiles and fails on any upper-limit breach, any portion past

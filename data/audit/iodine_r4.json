@@ -401,6 +401,13 @@
    "iodine_mcg_per_100g": 0.6,
    "match": "name"
   },
+  "carrot_baby": {
+   "row": 175,
+   "description": "Carrot, baby, raw",
+   "samples": 35,
+   "iodine_mcg_per_100g": 0.6,
+   "match": "usda_link"
+  },
   "carrot_cooked": {
    "row": 313,
    "description": "Carrot, fresh, peeled, boiled",
@@ -421,6 +428,13 @@
    "samples": 35,
    "iodine_mcg_per_100g": 3.2,
    "match": "name"
+  },
+  "catfish_farmed_raw": {
+   "row": 499,
+   "description": "Fish, catfish, farmed, raw",
+   "samples": 8,
+   "iodine_mcg_per_100g": 1.9,
+   "match": "usda_link"
   },
   "cauliflower": {
    "row": 75,
@@ -532,6 +546,13 @@
    "description": "Beverage, coconut water",
    "samples": 3,
    "iodine_mcg_per_100g": 0.6,
+   "match": "usda_link"
+  },
+  "cod_pac_raw": {
+   "row": 375,
+   "description": "Fish, cod, Pacific, raw",
+   "samples": 7,
+   "iodine_mcg_per_100g": 130.6,
    "match": "usda_link"
   },
   "coffee": {
@@ -667,6 +688,13 @@
    "iodine_mcg_per_100g": 0.5,
    "match": "name"
   },
+  "cucumber_peeled": {
+   "row": 79,
+   "description": "Cucumber, peeled, raw",
+   "samples": 35,
+   "iodine_mcg_per_100g": 0.5,
+   "match": "usda_link"
+  },
   "egg_dried": {
    "row": 355,
    "description": "Egg, whole, dried",
@@ -723,6 +751,13 @@
    "iodine_mcg_per_100g": 349.3,
    "match": "usda_link"
   },
+  "eggyolk_frozen": {
+   "row": 354,
+   "description": "Egg, yolk, raw, frozen, pasteurized",
+   "samples": 15,
+   "iodine_mcg_per_100g": 176.9,
+   "match": "usda_link"
+  },
   "energydrink": {
    "row": 212,
    "description": "Beverage, energy",
@@ -749,6 +784,13 @@
    "description": "Sauce, fish, ready-to-serve",
    "samples": 1,
    "iodine_mcg_per_100g": 20.7,
+   "match": "usda_link"
+  },
+  "flounder_raw": {
+   "row": 376,
+   "description": "Fish, flatfish (flounder and sole species), raw",
+   "samples": 4,
+   "iodine_mcg_per_100g": 14.3,
    "match": "usda_link"
   },
   "flourtortilla": {
@@ -883,6 +925,20 @@
    "samples": 28,
    "iodine_mcg_per_100g": 3.9,
    "match": "name"
+  },
+  "haddock_raw": {
+   "row": 377,
+   "description": "Fish, haddock, raw",
+   "samples": 3,
+   "iodine_mcg_per_100g": 227.0,
+   "match": "usda_link"
+  },
+  "halibut_raw": {
+   "row": 378,
+   "description": "Fish, halibut, Atlantic and Pacific, raw",
+   "samples": 5,
+   "iodine_mcg_per_100g": 8.0,
+   "match": "usda_link"
   },
   "ham_boneless": {
    "row": 26,
@@ -1038,12 +1094,26 @@
    "iodine_mcg_per_100g": 5.3,
    "match": "name"
   },
+  "milk1_vita_d": {
+   "row": 352,
+   "description": "Milk, lowfat (1%), fluid",
+   "samples": 24,
+   "iodine_mcg_per_100g": 36.1,
+   "match": "usda_link"
+  },
   "milk_producer": {
    "row": 20,
    "description": "Milk, whole, fluid",
    "samples": 59,
    "iodine_mcg_per_100g": 33.5,
    "match": "name"
+  },
+  "milk_whole_vitd": {
+   "row": 20,
+   "description": "Milk, whole, fluid",
+   "samples": 59,
+   "iodine_mcg_per_100g": 33.5,
+   "match": "usda_link"
   },
   "mixedveg_frozen": {
    "row": 142,
@@ -1093,6 +1163,27 @@
    "samples": 4,
    "iodine_mcg_per_100g": 9.3,
    "match": "name"
+  },
+  "oceanperch_raw": {
+   "row": 379,
+   "description": "Fish, ocean perch, Atlantic, raw",
+   "samples": 4,
+   "iodine_mcg_per_100g": 9.3,
+   "match": "usda_link"
+  },
+  "oj_canned": {
+   "row": 174,
+   "description": "Juice, orange, bottle/carton",
+   "samples": 10,
+   "iodine_mcg_per_100g": 8.5,
+   "match": "usda_link"
+  },
+  "oj_chilled": {
+   "row": 338,
+   "description": "Juice, orange, from frozen concentrate, reconstituted",
+   "samples": 7,
+   "iodine_mcg_per_100g": 0.4,
+   "match": "usda_link"
   },
   "okra": {
    "row": 317,
@@ -1150,6 +1241,13 @@
    "iodine_mcg_per_100g": 109.1,
    "match": "name"
   },
+  "parmesan_grated": {
+   "row": 349,
+   "description": "Cheese, parmesan, grated",
+   "samples": 9,
+   "iodine_mcg_per_100g": 82.4,
+   "match": "usda_link"
+  },
   "peach": {
    "row": 58,
    "description": "Peach, raw/frozen",
@@ -1163,6 +1261,13 @@
    "samples": 7,
    "iodine_mcg_per_100g": 6.2,
    "match": "name"
+  },
+  "peanut_dry_salt": {
+   "row": 39,
+   "description": "Peanuts, dry roasted, salted",
+   "samples": 10,
+   "iodine_mcg_per_100g": 0.5,
+   "match": "usda_link"
   },
   "peanutbutter": {
    "row": 38,
@@ -1395,6 +1500,13 @@
    "iodine_mcg_per_100g": 14.0,
    "match": "name"
   },
+  "rockfish_raw": {
+   "row": 380,
+   "description": "Fish, rockfish, Pacific, mixed species, raw",
+   "samples": 3,
+   "iodine_mcg_per_100g": 14.0,
+   "match": "usda_link"
+  },
   "rye": {
    "row": 337,
    "description": "Bread, rye",
@@ -1451,6 +1563,13 @@
    "iodine_mcg_per_100g": 0.1,
    "match": "name"
   },
+  "shrimp_raw": {
+   "row": 391,
+   "description": "Crustaceans, shrimp, mixed species, raw",
+   "samples": 17,
+   "iodine_mcg_per_100g": 14.2,
+   "match": "usda_link"
+  },
   "skim_calcium": {
    "row": 23,
    "description": "Milk, skim, fluid",
@@ -1464,6 +1583,13 @@
    "samples": 59,
    "iodine_mcg_per_100g": 34.2,
    "match": "name"
+  },
+  "skim_vita_d": {
+   "row": 23,
+   "description": "Milk, skim, fluid",
+   "samples": 59,
+   "iodine_mcg_per_100g": 34.2,
+   "match": "usda_link"
   },
   "snackcracker": {
    "row": 136,
@@ -1556,6 +1682,13 @@
    "iodine_mcg_per_100g": 0.0,
    "match": "usda_link"
   },
+  "sunflower_dryroast_salt": {
+   "row": 168,
+   "description": "Seeds, sunflower, shelled, salted, roasted",
+   "samples": 10,
+   "iodine_mcg_per_100g": 0.1,
+   "match": "usda_link"
+  },
   "sweetpot": {
    "row": 195,
    "description": "Sweet potato, baked, peel removed",
@@ -1590,6 +1723,13 @@
    "samples": 4,
    "iodine_mcg_per_100g": 19.5,
    "match": "name"
+  },
+  "swordfish_raw": {
+   "row": 385,
+   "description": "Fish, swordfish, raw",
+   "samples": 4,
+   "iodine_mcg_per_100g": 19.5,
+   "match": "usda_link"
   },
   "tamari": {
    "row": 219,
