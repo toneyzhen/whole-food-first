@@ -1279,13 +1279,17 @@ function suggest(p, poolKeys, sc, ul, tg){
     // left no iron room for the calorie top-up, so vegan and vegetarian days stalled near 60%
     // kcal. The 1.5 power spares foods using a small share of the room (a linear discount cost
     // 7-food days their dense picks); chosen by the 288-day sweep in tests/smoke.js.
+    // A limit the day is already over can't rule foods out (nearly every food has some sodium, so
+    // the panel went empty): rank by how little a serving adds, as a share of the limit.
     for (const n in ul) if (n !== "netcarb")
-      score *= Math.max(0.1, 1 - (ulAmount(f, n, f.serv) / Math.max(1e-9, ul[n] - load[n])) ** 1.5);
+      score *= load[n] > ul[n]
+        ? Math.max(0.05, 1 - ulAmount(f, n, f.serv) / (0.1 * ul[n]))
+        : Math.max(0.1, 1 - (ulAmount(f, n, f.serv) / Math.max(1e-9, ul[n] - load[n])) ** 1.5);
     // Prefer foods people actually buy: an uncommon one (beef spleen, starfruit, wheat germ oil)
     // only wins when it closes much more of the gap. Your own foods count as everyday.
     if (f.common === 0) score *= UNCOMMON_WEIGHT;
-    // disqualify anything that would breach an upper limit
-    for (const n in ul) if (load[n] + ulAmount(f, n, f.serv) > ul[n]) score = -1;
+    // disqualify anything that would push a limit over (one the day is already over is ranked above)
+    for (const n in ul) if (load[n] <= ul[n] && load[n] + ulAmount(f, n, f.serv) > ul[n]) score = -1;
     return {k, score, fixes: fixes.slice(0, 4), kcal: Math.round(f.n[IDX.kcal] * g)};
   }).filter(s => s.score > 0).sort((a, b) => b.score - a.score).slice(0, 10);
 }
@@ -1301,8 +1305,12 @@ document.getElementById("sugchips").addEventListener("click", e => {
 function renderSuggestions(){
   const card = document.getElementById("sugcard");
   const list = suggest(plan, pool(document.getElementById("sv-diet").value, "balanced", avoid));
+  const ul = limits(), load = ulLoad(plan, ul);
+  const over = Object.keys(ul).filter(n => load[n] > ul[n]).map(n => META[n].label);
   card.hidden = false;
-  document.getElementById("suglist").innerHTML = list.length
+  document.getElementById("suglist").innerHTML = (over.length
+    ? `<p class="rowhint" style="margin-bottom:12px">Your day is over the upper limit for ${over.join(", ")}.
+        These suggestions add as little of it as possible.</p>` : "") + (list.length
     ? list.map(s => `<div class="sug">
         <span><span class="sugname">${BY[s.k].name}</span>
           <span class="sugwhy">1 &times; ${BY[s.k].sl} &middot; ${s.kcal} kcal</span>
@@ -1311,7 +1319,7 @@ function renderSuggestions(){
     : (Object.keys(deficits(plan)).length
         ? `<p class="empty">No food left to suggest &mdash; everything that would help is
              switched off above, or excluded by your diet rules.</p>`
-        : `<p class="empty">Nothing left to fix &mdash; every target is met.</p>`);
+        : `<p class="empty">Nothing left to fix &mdash; every target is met.</p>`));
 }
 document.getElementById("btn-suggest").addEventListener("click", () => {
   renderSuggestions();

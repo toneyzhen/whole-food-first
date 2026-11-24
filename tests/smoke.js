@@ -108,6 +108,11 @@ const DIETS = ["anything","pescatarian","vegetarian","vegan","paleo","whole30","
        document.getElementById("removedmsg").textContent.includes(REMOVED.potatochips), "removed food not named");
     noteRemoved({});
     ok(/aria-label="NOVA group 1, unprocessed/.test(novaTag(BY.oats)), "badge has no spoken label");
+    // a day already over a limit (sodium, with canned food) still gets suggestions; ruling out
+    // every food with any sodium used to leave the panel empty
+    profile = {sex: "male", age: 40, kcal: 2500};
+    const salty = {oats: 80, blackbean_can: 240, tomatosauce: 244, salmon: 113, spinach: 180, cheddar: 56};
+    ok(ulLoad(salty, limits()).Na > limits().Na && suggest(salty).length > 0, "no suggestions for a day over a limit");
     // the calorie trim never removes a food the user kept
     profile = {sex: "male", age: 40, kcal: 2500};
     const seed = {oliveoil: 10, butter: 10, walnut: 200, peanut: 200, milk: 244};
