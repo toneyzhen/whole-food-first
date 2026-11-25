@@ -45,12 +45,12 @@ button{cursor:pointer}
 .mono{font-family:var(--mono);font-variant-numeric:tabular-nums}
 
 /* ---------- masthead + profile ---------- */
-header.top{padding-block:30px 0}
+header.top{padding-block:22px 0}
 .brandrow{display:flex;flex-wrap:wrap;gap:18px 28px;align-items:flex-end;
   justify-content:space-between;padding-bottom:18px;border-bottom:3px solid var(--rule-hard)}
 .brand h1{font-size:clamp(28px,4.2vw,40px);line-height:1;letter-spacing:-.025em;font-weight:700;
   color:var(--ink);margin:0}
-.brand p{margin:7px 0 0;font-size:15px;color:var(--muted);max-width:52ch}
+.brand p{margin:7px 0 0;font-size:15px;color:var(--muted);max-width:72ch}
 .profile{display:flex;flex-wrap:wrap;gap:14px;align-items:flex-end}
 .fld{display:flex;flex-direction:column;gap:5px}
 .fld label{font-family:var(--display);font-size:10px;font-weight:600;letter-spacing:.13em;
@@ -259,8 +259,9 @@ details[open]>.cfsum{border-bottom:1px solid var(--rule)}
 .nova.n2{background:var(--sunk2);color:var(--body)}
 .nova.n3{background:var(--ochre-soft);color:var(--ochre)}
 .nova.ex{background:var(--rust-soft);color:var(--rust)}
-.novakey{font-size:13px;line-height:1.7;color:var(--muted);margin-top:8px}
-.novakey .nova{margin:0 2px 0 0}
+.brand p.novakey{display:flex;flex-wrap:wrap;gap:4px 12px;align-items:center;margin-top:8px;max-width:none;
+  font-family:var(--display);font-size:12.5px;color:var(--muted)}
+.novakey .nova{margin:0 3px 0 0}
 .tg{font-family:var(--display);font-size:10.5px;font-weight:600;padding:2px 6px;border-radius:2px;
   background:var(--pine-soft);color:var(--pine);letter-spacing:.02em}
 
@@ -325,14 +326,14 @@ footer b{color:var(--muted);font-weight:600}
   <div class="brandrow">
     <div class="brand">
       <h1>Whole Food First</h1>
-      <p>Build a day of whole food and watch all 27 targets fill in. No supplements &mdash;
-        every nutrient has to come from something you actually eat.</p>
-      <p class="novakey">Every food carries its processing level on the NOVA scale:
-        <span class="nova n1">1</span> unprocessed or minimally processed &middot;
-        <span class="nova n2">2</span> culinary ingredient (oil, butter, sugar, salt) &middot;
-        <span class="nova n3">3</span> processed (cheese, bread, canned, cured or salted food).
-        Ultra-processed foods (group 4) are left out, except two fortified plant milks marked
-        <span class="nova ex">exception</span>, kept as a vegan&rsquo;s food source of vitamin B12.</p>
+      <p>Build a day of whole food that meets all 27 nutrient targets &mdash; no supplements.</p>
+      <p class="novakey" title="NOVA processing groups. Ultra-processed foods (group 4) are left out, except two fortified plant milks kept as a vegan's food source of vitamin B12. More in the notes at the bottom of the page.">
+        <span>Processing:</span>
+        <span><span class="nova n1">1</span> unprocessed</span>
+        <span><span class="nova n2">2</span> cooking ingredient</span>
+        <span><span class="nova n3">3</span> processed</span>
+        <span><span class="nova ex">exception</span> fortified plant milk</span>
+        <span>&mdash; no ultra-processed food</span></p>
     </div>
     <div class="profile">
       <div class="fld"><label for="sex">Sex</label>
