@@ -957,7 +957,9 @@ function renderCoverage(){
   let met = 0;
   const rows = ORDER.map(n => {
     const target = tg[n];
-    const p = target ? 100 * tot[IDX[n]] / target : null;
+    // molybdenum: amount only. Most foods read 0 (USDA doesn't measure it), so a % of its RDA
+    // would mislead either way; its upper limit is still checked through `over`
+    const p = target && n !== "Mo" ? 100 * tot[IDX[n]] / target : null;
     const over = ul[n] && load[n] > ul[n] * 1.001;
     const soft = D.softUl[n] && tot[IDX[n]] > D.softUl[n];
     const counted = COUNTED.includes(n) || n === "kcal";
