@@ -5,11 +5,14 @@ brNut.innerHTML = RANKABLE.map(n => `<option value="${n}">${META[n].label}</opti
 brNut.value = "K";
 document.getElementById("br-diet").innerHTML =
   Object.keys(DIETS).map(k => `<option value="${k}">${DIETS[k].label}</option>`).join("");
+// the ranking table's and the search box's category lists (your own foods add "My foods")
 function fillCats(){
-  const was = brCat.value;
-  brCat.innerHTML = `<option value="">All categories</option>` +
-    [...new Set(FOODS.map(f => f.cat))].sort().map(c => `<option>${c}</option>`).join("");
-  brCat.value = [...brCat.options].some(o => o.value === was) ? was : "";
+  for (const sel of [brCat, document.getElementById("searchcat")]){
+    const was = sel.value;
+    sel.innerHTML = `<option value="">All categories</option>` +
+      [...new Set(FOODS.map(f => f.cat))].sort().map(c => `<option>${c}</option>`).join("");
+    sel.value = [...sel.options].some(o => o.value === was) ? was : "";
+  }
 }
 fillCats();
 function renderBrowse(){

@@ -142,19 +142,46 @@ function renderPlan(){
 
 /* ---------------- search ---------------- */
 const search = document.getElementById("search"), results = document.getElementById("results");
+const searchCat = document.getElementById("searchcat"), searchUnc = document.getElementById("searchunc");
 let cursor = -1, hits = [];
+// Lower is better. With 1,600+ foods a word like "chicken" matches dozens of forms, so: names that
+// start with the query, your own foods, everyday foods, less processed (NOVA 1 before 3), cooked
+// before raw meat or fish weights and dry grains or beans, then shorter (more generic) names.
+function searchRank(f, words){
+  const n = f.name.toLowerCase(), w0 = words[0];
+  let r = n.length / 100;
+  if (!words.every(w => n.includes(w))) r += 100;                       // matched only by category or tag
+  if (!n.startsWith(w0)) r += new RegExp("[\\s(,-]" + w0.replace(/[^a-z0-9]/g, "")).test(n) ? 6 : 20;
+  // the query names the food itself ("Brown rice", "Ground beef", "Salmon, cooked"), not a dish made
+  // from it ("Rice noodles"): the last word before the first comma
+  const head = n.split(",")[0].trim().split(/\s+/).pop();
+  if (words.some(w => head === w || head === w + "s" || head + "s" === w)) r -= 7;
+  if (f.custom) r -= 5;
+  if (f.common === 0) r += 8;
+  r += ((f.nova || 1) - 1) * 2;
+  if (/\braw\b/.test(n) && (f.cat === "Meat & poultry" || f.cat === "Seafood")) r += 6;
+  if (/\bdry\b/.test(n) && (f.cat === "Grains & starches" || f.cat === "Legumes & soy")) r += 4;
+  if (/\bcanned\b/.test(n) && !words.includes("canned")) r += 4;
+  return r;
+}
 function runSearch(){
   const q = search.value.trim().toLowerCase();
   if (!q){ results.hidden = true; search.setAttribute("aria-expanded","false"); return; }
-  hits = FOODS.filter(f => f.name.toLowerCase().includes(q) || f.cat.toLowerCase().includes(q)
-                          || (q.length >= 4 && (f.tags || "").includes(q)))
-              .slice(0, 40);
+  const words = q.split(/\s+/), cat = searchCat.value;
+  const all = FOODS.filter(f => (!cat || f.cat === cat) && words.every(w => f.name.toLowerCase().includes(w)
+    || f.cat.toLowerCase().includes(w) || (w.length >= 4 && (f.tags || "").includes(w))));
+  // uncommon foods (game, organ meats, specialty items) only on request, or when nothing else matches
+  const everyday = all.filter(f => f.common !== 0);
+  const pool = searchUnc.checked || !everyday.length ? all : everyday, hidden = all.length - pool.length;
+  hits = pool.map(f => [searchRank(f, words), f]).sort((a, b) => a[0] - b[0]).map(x => x[1]).slice(0, 40);
   cursor = hits.length ? 0 : -1;
   results.innerHTML = hits.length
     ? hits.map((f,i) => `<button class="res${i === 0 ? " cursor" : ""}" data-add="${f.k}"
         role="option" aria-selected="${i === 0}" id="res-${i}"><span>${f.name}${novaTag(f)}</span>
         <small>${f.cat} &middot; ${f.sl}</small></button>`).join("")
-    : `<p class="empty">No food matches &ldquo;${esc(q)}&rdquo;.</p>`;
+      + (hidden ? `<p class="reshint">${hidden} uncommon match${hidden === 1 ? "" : "es"} hidden &mdash; tick
+          &ldquo;Include uncommon foods&rdquo; to see ${hidden === 1 ? "it" : "them"}.</p>` : "")
+    : `<p class="empty">No food matches &ldquo;${esc(q)}&rdquo;${cat ? ` in ${esc(cat)}` : ""}.</p>`;
   results.hidden = false;
   search.setAttribute("aria-expanded","true");
   syncCursor();
@@ -175,6 +202,7 @@ function addFood(k, grams){
   renderPlan();
 }
 search.addEventListener("input", runSearch);
+for (const c of [searchCat, searchUnc]) c.addEventListener("change", () => { if (search.value.trim()) runSearch(); });
 search.addEventListener("keydown", e => {
   if (results.hidden || !hits.length) return;
   if (e.key === "ArrowDown" || e.key === "ArrowUp"){

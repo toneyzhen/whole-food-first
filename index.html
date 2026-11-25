@@ -94,6 +94,12 @@ header.top{padding-block:30px 0}
 .res:hover,.res.cursor{background:var(--pine-soft)}
 .res small{font-family:var(--display);font-size:11.5px;color:var(--muted);white-space:nowrap}
 .empty{padding:26px 18px;text-align:center;color:var(--muted);font-size:15px}
+.reshint{padding:9px 13px;font-family:var(--display);font-size:12px;color:var(--muted)}
+.searchopts{display:flex;flex-wrap:wrap;gap:8px 16px;align-items:center;margin-top:8px;
+  font-family:var(--display);font-size:12.5px;color:var(--muted)}
+.searchopts select{background:var(--surface);border:1px solid var(--rule);border-radius:3px;
+  height:32px;padding:0 8px;font-family:var(--display);font-size:12.5px;color:var(--ink)}
+.searchopts label{display:inline-flex;gap:6px;align-items:center;cursor:pointer}
 
 /* ---------- plan rows ---------- */
 .prow{display:grid;grid-template-columns:auto minmax(0,1fr) auto;gap:10px 10px;align-items:center;
@@ -134,6 +140,11 @@ body.reordering{user-select:none;-webkit-user-select:none;cursor:grabbing}
 .sum{display:grid;grid-template-columns:repeat(3,1fr);border-bottom:6px solid var(--rule-hard)}
 .sumcell{padding:13px 14px;border-right:1px solid var(--rule)}
 .sumcell:last-child{border-right:none}
+/* four cells (with the whole-food score) as a 2 x 2 grid, so the numbers fit a narrow column */
+.sum.four{grid-template-columns:repeat(2,1fr)}
+.sum.four .sumcell{border-bottom:1px solid var(--rule)}
+.sum.four .sumcell:nth-child(2n){border-right:none}
+.sum.four .sumcell:nth-last-child(-n+2){border-bottom:none}
 .sumcell .k{font-family:var(--display);font-size:9.5px;font-weight:600;letter-spacing:.12em;
   text-transform:uppercase;color:var(--faint);display:block}
 .sumcell .v{font-family:var(--mono);font-size:21px;font-weight:600;color:var(--ink);
@@ -363,6 +374,10 @@ footer b{color:var(--muted);font-weight:600}
           </div>
           <select id="addmeal" aria-label="Meal that new foods are added to"></select>
         </div>
+        <div class="searchopts">
+          <select id="searchcat" aria-label="Search only this category"></select>
+          <label><input type="checkbox" id="searchunc"> Include uncommon foods</label>
+        </div>
       </div>
       <p class="rowhint">Amounts are in <b>servings</b> &mdash; type decimals like
         <b>0.5</b> or <b>1.25</b>; the &minus; and + buttons step by one whole serving. Drag the <b>&#8942;&#8942;</b> handle to reorder
@@ -450,9 +465,11 @@ footer b{color:var(--muted);font-weight:600}
   </div>
   <div class="cov">
     <div class="card">
-      <div class="sum">
+      <div class="sum four">
         <div class="sumcell"><span class="k">Targets met</span><span class="v" id="s-met">0/28</span></div>
         <div class="sumcell"><span class="k">Calories</span><span class="v" id="s-kcal">0</span></div>
+        <div class="sumcell" title="Share of calories from NOVA group 1 (unprocessed or minimally processed) and group 2 (cooking ingredients). The rest is group 3 processed food and the two fortified-milk exceptions; your own foods are left out.">
+          <span class="k">Whole food</span><span class="v" id="s-whole">&mdash;</span></div>
         <div class="sumcell"><span class="k">Food weight</span><span class="v" id="s-mass">0 g</span></div>
       </div>
       <div class="covtools">
@@ -915,6 +932,18 @@ function noteHTML(n){
 }
 
 /* ---------------- coverage panel ---------------- */
+// Whole-food score: % of a day's calories from NOVA group 1 (unprocessed or minimally processed)
+// and group 2 (cooking ingredients). Group 3 and the two group-4 exceptions are the rest; your own
+// foods have no group and are left out. null when nothing in the day has a group.
+function wholeFoodPct(p){
+  let all = 0, whole = 0;
+  for (const k in p){
+    const f = BY[k]; if (!f || !f.nova) continue;
+    const kc = f.n[IDX.kcal] * p[k] / 100;
+    all += kc; if (f.nova <= 2) whole += kc;
+  }
+  return all > 0 ? Math.round(100 * whole / all) : null;
+}
 function renderCoverage(){
   const tot = totals(plan), tg = targets(), ul = limits(), load = ulLoad(plan);
   let met = 0;
@@ -961,6 +990,8 @@ function renderCoverage(){
   el("s-met").className = "v " + (met === 28 ? "good" : met ? "bad" : "");
   el("s-kcal").textContent = Math.round(tot[IDX.kcal]);
   el("s-mass").textContent = Math.round(mass) + " g";
+  const whole = wholeFoodPct(plan);
+  el("s-whole").textContent = whole === null ? "—" : whole + "%";
   el("covhint").textContent = !Object.keys(plan).length ? "Add food to begin"
     : gaps.length ? gaps.length + " still short" : "Every target met";
 }
@@ -1109,19 +1140,46 @@ function renderPlan(){
 
 /* ---------------- search ---------------- */
 const search = document.getElementById("search"), results = document.getElementById("results");
+const searchCat = document.getElementById("searchcat"), searchUnc = document.getElementById("searchunc");
 let cursor = -1, hits = [];
+// Lower is better. With 1,600+ foods a word like "chicken" matches dozens of forms, so: names that
+// start with the query, your own foods, everyday foods, less processed (NOVA 1 before 3), cooked
+// before raw meat or fish weights and dry grains or beans, then shorter (more generic) names.
+function searchRank(f, words){
+  const n = f.name.toLowerCase(), w0 = words[0];
+  let r = n.length / 100;
+  if (!words.every(w => n.includes(w))) r += 100;                       // matched only by category or tag
+  if (!n.startsWith(w0)) r += new RegExp("[\\s(,-]" + w0.replace(/[^a-z0-9]/g, "")).test(n) ? 6 : 20;
+  // the query names the food itself ("Brown rice", "Ground beef", "Salmon, cooked"), not a dish made
+  // from it ("Rice noodles"): the last word before the first comma
+  const head = n.split(",")[0].trim().split(/\s+/).pop();
+  if (words.some(w => head === w || head === w + "s" || head + "s" === w)) r -= 7;
+  if (f.custom) r -= 5;
+  if (f.common === 0) r += 8;
+  r += ((f.nova || 1) - 1) * 2;
+  if (/\braw\b/.test(n) && (f.cat === "Meat & poultry" || f.cat === "Seafood")) r += 6;
+  if (/\bdry\b/.test(n) && (f.cat === "Grains & starches" || f.cat === "Legumes & soy")) r += 4;
+  if (/\bcanned\b/.test(n) && !words.includes("canned")) r += 4;
+  return r;
+}
 function runSearch(){
   const q = search.value.trim().toLowerCase();
   if (!q){ results.hidden = true; search.setAttribute("aria-expanded","false"); return; }
-  hits = FOODS.filter(f => f.name.toLowerCase().includes(q) || f.cat.toLowerCase().includes(q)
-                          || (q.length >= 4 && (f.tags || "").includes(q)))
-              .slice(0, 40);
+  const words = q.split(/\s+/), cat = searchCat.value;
+  const all = FOODS.filter(f => (!cat || f.cat === cat) && words.every(w => f.name.toLowerCase().includes(w)
+    || f.cat.toLowerCase().includes(w) || (w.length >= 4 && (f.tags || "").includes(w))));
+  // uncommon foods (game, organ meats, specialty items) only on request, or when nothing else matches
+  const everyday = all.filter(f => f.common !== 0);
+  const pool = searchUnc.checked || !everyday.length ? all : everyday, hidden = all.length - pool.length;
+  hits = pool.map(f => [searchRank(f, words), f]).sort((a, b) => a[0] - b[0]).map(x => x[1]).slice(0, 40);
   cursor = hits.length ? 0 : -1;
   results.innerHTML = hits.length
     ? hits.map((f,i) => `<button class="res${i === 0 ? " cursor" : ""}" data-add="${f.k}"
         role="option" aria-selected="${i === 0}" id="res-${i}"><span>${f.name}${novaTag(f)}</span>
         <small>${f.cat} &middot; ${f.sl}</small></button>`).join("")
-    : `<p class="empty">No food matches &ldquo;${esc(q)}&rdquo;.</p>`;
+      + (hidden ? `<p class="reshint">${hidden} uncommon match${hidden === 1 ? "" : "es"} hidden &mdash; tick
+          &ldquo;Include uncommon foods&rdquo; to see ${hidden === 1 ? "it" : "them"}.</p>` : "")
+    : `<p class="empty">No food matches &ldquo;${esc(q)}&rdquo;${cat ? ` in ${esc(cat)}` : ""}.</p>`;
   results.hidden = false;
   search.setAttribute("aria-expanded","true");
   syncCursor();
@@ -1142,6 +1200,7 @@ function addFood(k, grams){
   renderPlan();
 }
 search.addEventListener("input", runSearch);
+for (const c of [searchCat, searchUnc]) c.addEventListener("change", () => { if (search.value.trim()) runSearch(); });
 search.addEventListener("keydown", e => {
   if (results.hidden || !hits.length) return;
   if (e.key === "ArrowDown" || e.key === "ArrowUp"){
@@ -1625,10 +1684,12 @@ function planCard(p, i, opts){
       </span><span class="mono" style="font-size:12.5px;color:var(--muted)">${
         Math.round(BY[k].n[IDX.kcal]*p[k]/100)} kcal</span></div>`).join("") : "";
     }).join("")}</div>
-    <div class="sum" style="border-bottom:none;border-top:1px solid var(--rule)">
+    <div class="sum four" style="border-bottom:none;border-top:1px solid var(--rule)">
       <div class="sumcell"><span class="k">Targets met</span>
         <span class="v ${ok?"good":"bad"}">${28 - e.short.length}/28</span></div>
       <div class="sumcell"><span class="k">Calories</span><span class="v">${e.kcal}</span></div>
+      <div class="sumcell" title="Share of calories from NOVA group 1 (unprocessed or minimally processed) and group 2 (cooking ingredients)">
+        <span class="k">Whole food</span><span class="v">${wholeFoodPct(p) === null ? "—" : wholeFoodPct(p) + "%"}</span></div>
       <div class="sumcell"><span class="k">Weight</span><span class="v">${e.mass} g</span></div>
     </div>
     <div class="solvenote" style="padding-top:12px">Net carbs
@@ -1728,11 +1789,14 @@ brNut.innerHTML = RANKABLE.map(n => `<option value="${n}">${META[n].label}</opti
 brNut.value = "K";
 document.getElementById("br-diet").innerHTML =
   Object.keys(DIETS).map(k => `<option value="${k}">${DIETS[k].label}</option>`).join("");
+// the ranking table's and the search box's category lists (your own foods add "My foods")
 function fillCats(){
-  const was = brCat.value;
-  brCat.innerHTML = `<option value="">All categories</option>` +
-    [...new Set(FOODS.map(f => f.cat))].sort().map(c => `<option>${c}</option>`).join("");
-  brCat.value = [...brCat.options].some(o => o.value === was) ? was : "";
+  for (const sel of [brCat, document.getElementById("searchcat")]){
+    const was = sel.value;
+    sel.innerHTML = `<option value="">All categories</option>` +
+      [...new Set(FOODS.map(f => f.cat))].sort().map(c => `<option>${c}</option>`).join("");
+    sel.value = [...sel.options].some(o => o.value === was) ? was : "";
+  }
 }
 fillCats();
 function renderBrowse(){

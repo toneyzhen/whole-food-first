@@ -13,7 +13,15 @@ No install, no server, no account.
 1.25 servings), and drag to reorder. The day is split into breakfast, lunch, dinner and snacks,
 with calories per meal; drag a food (or use the arrow keys) to move it between meals. The same
 food can appear in more than one meal: pick the meal next to the search box and add it again. A coverage
-panel shows every target as a bar, with gaps and upper-limit breaches highlighted.
+panel shows every target as a bar, with gaps and upper-limit breaches highlighted, and a
+**whole-food score**: the share of the day's calories from NOVA group 1 and 2 foods.
+
+**Search.** Every word you type must match ("chicken thigh roasted"). Results put the food
+itself before dishes made from it ("rice" lists brown and white rice before rice noodles), everyday
+foods before uncommon ones, less processed before more, and cooked forms before raw weights of
+meat and fish, dry grains and beans, and canned versions. Narrow it to one category, or tick
+**Include uncommon foods** to see game, organ meats and specialty items (they show anyway when
+nothing else matches).
 
 **Processing levels.** Every food carries its NOVA group, the standard research classification
 of how processed a food is, as a badge beside its name:
@@ -149,9 +157,10 @@ node tests/smoke.js             # solve every diet pattern in headless Chromium 
 GitHub Actions runs all three on every push and pull request, and fails if the committed
 `index.html` doesn't match a fresh build.
 
-- `src/app.template.html` is the whole app (HTML, CSS, JS). The `/*__DATA__*/` placeholder is
-  replaced with the contents of `data/foods.json` at build time, so `index.html` is fully
-  self-contained.
+- `src/app.template.html` is the page (HTML and CSS); the JavaScript is in `src/js/`, one file per
+  area: `foods`, `nutrients`, `builder`, `solver`, `views`, `storage`, `boot`. `build.py` inlines
+  them in that order (they share one scope) and replaces `/*__DATA__*/` with `data/foods.json`, so
+  `index.html` is fully self-contained.
 - `index.html` is committed so the app runs straight from the repo or from GitHub Pages.
 
 ## Known issues

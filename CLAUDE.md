@@ -9,7 +9,15 @@ change it without breaking its rules.
 
 ## Layout and workflow
 
-- `src/app.template.html` — the entire app (HTML + CSS + vanilla JS, no framework, no build deps).
+- `src/app.template.html` — the page: HTML and CSS, with `/*__JS__*/` where the scripts go.
+- `src/js/*.js` — the app's vanilla JS (no framework, no build deps), by area: `foods` (data,
+  your own foods, RENAMED/REMOVED, caps), `nutrients` (targets, explainers, coverage panel and
+  whole-food score), `builder` (plan list, meals, search, editing), `solver` (suggestions,
+  solveDay and its steps), `views` (ranking, tabs, profile), `storage` (saving, your own foods
+  form, share links and backups), `boot` (startup). `build.py` concatenates them in the order of
+  its `JS_FILES` into one `<script>`: they share one scope and run top to bottom, so a file may
+  use anything defined in an earlier one. Keep new code in the file of its area, and add a file
+  to `JS_FILES` in the right place if a new area appears.
 - `data/foods.json` — the database: `order` (32 nutrient keys), `meta` (labels/units/notes),
   `foods` (each: `k` key, `name`, `cat`, `cls` plant|dairy|egg|fish|meat, `serv` grams per
   serving, `sl` serving label, `tags` space-separated, `raw` 0|1, `n` values in `order`, per
@@ -109,8 +117,8 @@ inherited names like `toString` from share links), the share-link encoding and m
    90% kcal, 8 over 105%). Without it, fortified cereals used up the iron room and vegan days
    stalled near 60% kcal. Check those sweep numbers again after adding foods.
 3. Top-up picks the most energy-dense ordinary staple; it could choose by nutrient fit instead.
-4. `src/app.template.html` is ~2,050 lines. If the solver grows further, split the JS into
-   files that `build.py` inlines, keeping the single-file output.
+4. Search ranking (`searchRank` in builder.js) is hand-tuned on common queries (rice, chicken,
+   beef, beans, salmon, tuna); smoke.js checks one. Re-check a few after adding many foods.
 5. `UNCOMMON_WEIGHT` (0.5) scales an uncommon food's score in `suggest`. Sweep, 1.0 vs 0.5:
    uncommon foods per day 3.1 -> 0.3, fully met at 14 foods 125 -> 126, at 7 foods 48 -> 40,
    days over 105% kcal 8 -> 10. 0.4 and 0.3 cost carnivore organ meats (21-23/28).

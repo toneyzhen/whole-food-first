@@ -113,6 +113,17 @@ const DIETS = ["anything","pescatarian","vegetarian","vegan","paleo","whole30","
     profile = {sex: "male", age: 40, kcal: 2500};
     const salty = {oats: 80, blackbean_can: 240, tomatosauce: 244, salmon: 113, spinach: 180, cheddar: 56};
     ok(ulLoad(salty, limits()).Na > limits().Na && suggest(salty).length > 0, "no suggestions for a day over a limit");
+    // whole-food score: share of calories from NOVA 1-2 (oats 1, cheddar 3)
+    const wf = wholeFoodPct({oats: 100, cheddar: 100}), kO = BY.oats.n[IDX.kcal], kC = BY.cheddar.n[IDX.kcal];
+    ok(BY.oats.nova === 1 && BY.cheddar.nova === 3 && wf === Math.round(100 * kO / (kO + kC)), "whole-food score");
+    ok(wholeFoodPct({}) === null, "whole-food score of an empty day");
+    // search: every word must match, and the plain cooked everyday food ranks first
+    search.value = "chicken breast"; searchCat.value = ""; searchUnc.checked = false; runSearch();
+    ok(hits.length && hits.every(f => /chicken/i.test(f.name) && /breast/i.test(f.name)) &&
+       !/\braw\b/i.test(hits[0].name) && hits[0].common !== 0, "search ranking");
+    search.value = "spleen"; runSearch();   // only uncommon foods match: shown anyway
+    ok(hits.length > 0 && hits.every(f => f.common === 0), "uncommon-only search");
+    search.value = ""; runSearch();
     // the calorie trim never removes a food the user kept
     profile = {sex: "male", age: 40, kcal: 2500};
     const seed = {oliveoil: 10, butter: 10, walnut: 200, peanut: 200, milk: 244};

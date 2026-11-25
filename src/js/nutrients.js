@@ -141,6 +141,18 @@ function noteHTML(n){
 }
 
 /* ---------------- coverage panel ---------------- */
+// Whole-food score: % of a day's calories from NOVA group 1 (unprocessed or minimally processed)
+// and group 2 (cooking ingredients). Group 3 and the two group-4 exceptions are the rest; your own
+// foods have no group and are left out. null when nothing in the day has a group.
+function wholeFoodPct(p){
+  let all = 0, whole = 0;
+  for (const k in p){
+    const f = BY[k]; if (!f || !f.nova) continue;
+    const kc = f.n[IDX.kcal] * p[k] / 100;
+    all += kc; if (f.nova <= 2) whole += kc;
+  }
+  return all > 0 ? Math.round(100 * whole / all) : null;
+}
 function renderCoverage(){
   const tot = totals(plan), tg = targets(), ul = limits(), load = ulLoad(plan);
   let met = 0;
@@ -187,6 +199,8 @@ function renderCoverage(){
   el("s-met").className = "v " + (met === 28 ? "good" : met ? "bad" : "");
   el("s-kcal").textContent = Math.round(tot[IDX.kcal]);
   el("s-mass").textContent = Math.round(mass) + " g";
+  const whole = wholeFoodPct(plan);
+  el("s-whole").textContent = whole === null ? "—" : whole + "%";
   el("covhint").textContent = !Object.keys(plan).length ? "Add food to begin"
     : gaps.length ? gaps.length + " still short" : "Every target met";
 }

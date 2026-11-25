@@ -370,10 +370,12 @@ function planCard(p, i, opts){
       </span><span class="mono" style="font-size:12.5px;color:var(--muted)">${
         Math.round(BY[k].n[IDX.kcal]*p[k]/100)} kcal</span></div>`).join("") : "";
     }).join("")}</div>
-    <div class="sum" style="border-bottom:none;border-top:1px solid var(--rule)">
+    <div class="sum four" style="border-bottom:none;border-top:1px solid var(--rule)">
       <div class="sumcell"><span class="k">Targets met</span>
         <span class="v ${ok?"good":"bad"}">${28 - e.short.length}/28</span></div>
       <div class="sumcell"><span class="k">Calories</span><span class="v">${e.kcal}</span></div>
+      <div class="sumcell" title="Share of calories from NOVA group 1 (unprocessed or minimally processed) and group 2 (cooking ingredients)">
+        <span class="k">Whole food</span><span class="v">${wholeFoodPct(p) === null ? "—" : wholeFoodPct(p) + "%"}</span></div>
       <div class="sumcell"><span class="k">Weight</span><span class="v">${e.mass} g</span></div>
     </div>
     <div class="solvenote" style="padding-top:12px">Net carbs
