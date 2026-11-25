@@ -181,7 +181,7 @@ function renderCoverage(){
       note:"Carbohydrate minus fiber \u2014 what the keto and low-carb patterns cap."};
     const cls = r.over ? "over" : (r.counted && !r.ok ? "gap" : "");
     const w = r.p === null ? 0 : Math.max(0, Math.min(100, r.p));
-    const label = r.n === "EPADHA" ? m.label + " · no DRI" : m.label;
+    const label = r.n === "EPADHA" ? m.label + " · no DRI" : r.n === "Mo" ? m.label + " · info only" : m.label;
     const shown = r.p === null ? "—" : (r.p >= 999 ? "999+" : Math.round(r.p) + "%");
     return `<div class="nrow ${cls}">
       <span class="nlabel"><span>${label}</span><button class="info" data-note="${r.n}" title="About ${m.label}"
@@ -195,8 +195,8 @@ function renderCoverage(){
 
   const mass = Object.values(plan).reduce((a, b) => a + b, 0);
   const el = id => document.getElementById(id);
-  el("s-met").textContent = met + "/28";
-  el("s-met").className = "v " + (met === 28 ? "good" : met ? "bad" : "");
+  el("s-met").textContent = met + "/" + TARGETS;
+  el("s-met").className = "v " + (met === TARGETS ? "good" : met ? "bad" : "");
   el("s-kcal").textContent = Math.round(tot[IDX.kcal]);
   el("s-mass").textContent = Math.round(mass) + " g";
   const whole = wholeFoodPct(plan);

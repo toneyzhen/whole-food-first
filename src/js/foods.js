@@ -2,8 +2,12 @@ const D = /*__DATA__*/;
 const ORDER = D.order, META = D.meta, FOODS = D.foods;
 const BY = {}; FOODS.forEach(f => BY[f.k] = f);
 const IDX = {}; ORDER.forEach((n, i) => IDX[n] = i);
-const INFO = new Set(["kcal","EPADHA","fat","carb","Na"]);   // tracked, but not scored as targets
-const COUNTED = ORDER.filter(n => !INFO.has(n));        // 27 + calories = 28
+// Tracked, but not scored as targets. Molybdenum is informational because USDA doesn't measure it:
+// most foods read 0, so its "gap" was missing data, not a real shortfall (dietary deficiency is
+// essentially unknown).
+const INFO = new Set(["kcal","EPADHA","fat","carb","Na","Mo"]);
+const COUNTED = ORDER.filter(n => !INFO.has(n));
+const TARGETS = COUNTED.length + 1;                     // the counted nutrients + calories (27)
 
 // The vitamin A UL covers preformed retinol (liver, egg, dairy, fish) only; provitamin A
 // carotenoids from plants have no upper limit. Without this split, eating a lot of spinach

@@ -13,11 +13,11 @@ const DIETS = ["anything","pescatarian","vegetarian","vegan","paleo","whole30","
     const r = await page.evaluate(diet => {
       const p = solveDay({diet, maxFoods: 14, style: "balanced", seed: null, avoid: new Set()});
       const e = evaluate(p, diet);
-      return {met: 28 - e.short.length, short: e.short, over: e.over, foods: Object.keys(p).length,
+      return {met: TARGETS - e.short.length, total: TARGETS, short: e.short, over: e.over, foods: Object.keys(p).length,
               kcalPct: Math.round(100 * e.kcal / targets().kcal),
               uncommon: Object.keys(p).filter(k => BY[k].common === 0)};
     }, diet);
-    console.log(`${diet.padEnd(14)} ${r.met}/28  foods ${r.foods}  kcal ${r.kcalPct}%` +
+    console.log(`${diet.padEnd(14)} ${r.met}/${r.total}  foods ${r.foods}  kcal ${r.kcalPct}%` +
       (r.uncommon.length ? `  uncommon: ${r.uncommon.join(', ')}` : '') +
       (r.short.length ? `  short: ${r.short.join(', ')}` : '') + (r.over.length ? `  OVER: ${r.over}` : ''));
     if (r.over.length) errors.push(`${diet}: over an upper limit`);

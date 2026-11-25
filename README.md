@@ -1,7 +1,7 @@
 # Whole Food First
 
 A single-page planner for building a day of whole and minimally processed food that meets the
-US Dietary Reference Intakes (all 28 targets) and seeing exactly where each nutrient comes from.
+US Dietary Reference Intakes (all 27 targets) and seeing exactly where each nutrient comes from.
 (Formerly The Complete Day.)
 
 **Use it:** https://toneyzhen.github.io/the-complete-day/ — or open `index.html` in a browser.
@@ -97,6 +97,8 @@ Calories are set by you. Some deliberate choices:
 - **Vitamin K** counts K1 and K2 together (both are cofactors for the same enzyme).
 - **Sodium** is a ceiling (2,300 mg), never a gap.
 - **EPA + DHA**, fat and carbohydrate are shown for information; they have no DRI.
+- **Molybdenum** is shown for information, not counted: USDA doesn't measure it, so most foods read
+  zero, and a "gap" would be missing data rather than a real shortfall. Its upper limit still applies.
 - **Manganese's** 11 mg upper limit is shown but not enforced.
 - The vitamin A upper limit applies to preformed A only, not plant carotenoids.
 
@@ -169,7 +171,7 @@ GitHub Actions runs all three on every push and pull request, and fails if the c
   fewer it rarely closes every target, and calories can stay under target.
 - A few days still can't meet every nutrient within the calorie target from the allowed foods,
   mostly at low targets (1,400–1,600 kcal). About 2% of a 2,880-day test sweep lands above 105%.
-- Carnivore reaches about 22/28: no animal food has fiber, and without liverwurst and pâté its
+- Carnivore reaches about 22/27: no animal food has fiber, and without liverwurst and pâté its
   vitamin A and K come up short.
 - A saved day that uses one of your own foods loses that food when opened in another browser,
   unless it arrives through a share link or a backup file.

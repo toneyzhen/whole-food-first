@@ -35,7 +35,7 @@ After any change:
 python3 scripts/validate.py && python3 build.py && node tests/smoke.js
 ```
 The smoke test needs Playwright (CI installs it; see `.github/workflows/ci.yml`). Calories count
-toward the 28, as in the builder. Expected results at 14 foods: 28/28 at 100–102% kcal using 8–12
+toward the 27, as in the builder. Expected results at 14 foods: 27/27 at 100–102% kcal using 8–12
 foods for every pattern except carnivore (~22: no route to fiber, and it leans on organ meats),
 and at most one uncommon food in each of those days (carnivore excepted). Any `OVER` line, or calories
 above 105%, fails. It also sweeps every bias ×
@@ -97,7 +97,8 @@ inherited names like `toString` from share links), the share-link encoding and m
 - Several tabs share that storage. A `storage` listener picks up another tab's saved days in place
   and reloads when your own foods change; never make startup write `completeday-foods`, or two
   open tabs will reload each other forever.
-- 28 targets = 27 counted nutrients + calories. Informational only (never a gap): EPA+DHA, fat,
+- 27 targets (`TARGETS`) = 26 counted nutrients + calories. Informational only (never a gap):
+  molybdenum (USDA doesn't measure it, so most foods read 0; its UL still applies), EPA+DHA, fat,
   carb, sodium. Manganese's UL is advisory. The vitamin A UL counts preformed A only.
 - The current day, profile and chip settings persist in `localStorage` (key `completeday`).
   Saved days use the `window.claude` db when hosted as a claude.ai artifact; standalone they go

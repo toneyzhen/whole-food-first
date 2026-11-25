@@ -342,7 +342,7 @@ function tune(p, tg, ul, sc){
 function evaluate(p, diet){
   const tot = totals(p), tg = dietTargets(diet || "anything");
   const ul = Object.assign({}, limits(), dietCaps(diet || "anything"));
-  // calories count toward the 28 too, the same way the builder's coverage panel counts them
+  // calories count toward the TARGETS too, the same way the builder's coverage panel counts them
   const short = COUNTED.concat(["kcal"]).filter(n => tg[n] && tot[IDX[n]] < tg[n] * 0.995);
   const load = ulLoad(p, ul);
   const over = Object.keys(ul).filter(n => load[n] > ul[n] * 1.001);
@@ -372,7 +372,7 @@ function planCard(p, i, opts){
     }).join("")}</div>
     <div class="sum four" style="border-bottom:none;border-top:1px solid var(--rule)">
       <div class="sumcell"><span class="k">Targets met</span>
-        <span class="v ${ok?"good":"bad"}">${28 - e.short.length}/28</span></div>
+        <span class="v ${ok?"good":"bad"}">${TARGETS - e.short.length}/${TARGETS}</span></div>
       <div class="sumcell"><span class="k">Calories</span><span class="v">${e.kcal}</span></div>
       <div class="sumcell" title="Share of calories from NOVA group 1 (unprocessed or minimally processed) and group 2 (cooking ingredients)">
         <span class="k">Whole food</span><span class="v">${wholeFoodPct(p) === null ? "—" : wholeFoodPct(p) + "%"}</span></div>

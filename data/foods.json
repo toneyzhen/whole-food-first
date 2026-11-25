@@ -224,7 +224,7 @@
    "label": "Molybdenum",
    "unit": "mcg",
    "group": "mineral",
-   "note": "Legumes and grains carry it; deficiency is basically unknown."
+   "note": "Shown for information, not counted as a target: USDA doesn't measure molybdenum, so most foods here read zero. Legumes, grains and nuts are rich sources, and dietary deficiency is essentially unknown."
   }
  },
  "foods": [
