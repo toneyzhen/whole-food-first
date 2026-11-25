@@ -115,6 +115,15 @@ exceptions). The 170 ultra-processed foods taken out are listed by name under `r
   Iodine Database for iodine; the Japanese Standard Tables of Food Composition for toasted
   nori; product Nutrition Facts panels for fortified drinks (one widely sold US product
   each, so check your own carton).
+- **Newer lab values for 156 staples.** Where USDA's newer Foundation Foods dataset (April 2026)
+  has the same food in the same form, its measurements replace the 2018 SR Legacy ones, nutrient by
+  nutrient (a food keeps SR values for anything Foundation didn't measure). Each such food carries
+  its Foundation ID in `ff`, and every changed value, old and new, is in
+  `data/audit/foundation_2026-04.json`. Not taken: a Foundation 0 where SR had a value (Foundation
+  often records 0 when it didn't quantify a nutrient), and Brazil nut selenium (it varies hugely
+  with soil; the higher figure keeps the upper limit safe).
+- **Serving sizes** that matched no USDA portion were checked; 31 were corrected (e.g. dry milk
+  powder is now 3 tbsp, grated Parmesan 2 tbsp).
 - **NOVA groups** were assigned by Sonnet subagents from the official definitions plus written
   rules for what USDA names leave open (a food is labeled as typically sold in a US supermarket;
   plain breads are group 3 because a simple bakery loaf is easy to buy; added vitamins alone don't
@@ -171,8 +180,8 @@ GitHub Actions runs all three on every push and pull request, and fails if the c
   fewer it rarely closes every target, and calories can stay under target.
 - A few days still can't meet every nutrient within the calorie target from the allowed foods,
   mostly at low targets (1,400–1,600 kcal). About 2% of a 2,880-day test sweep lands above 105%.
-- Carnivore reaches about 22/27: no animal food has fiber, and without liverwurst and pâté its
-  vitamin A and K come up short.
+- Carnivore reaches about 20/27: no animal food has fiber, and without liverwurst and pâté its
+  vitamin A, K and E come up short.
 - A saved day that uses one of your own foods loses that food when opened in another browser,
   unless it arrives through a share link or a backup file.
 

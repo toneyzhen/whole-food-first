@@ -25,7 +25,8 @@ change it without breaking its rules.
   serving, `sl` serving label, `tags` space-separated, `raw` 0|1, `n` values in `order`, per
   100 g, `common` 1 for an everyday food or 0 for an uncommon one, `nova` its NOVA processing
   group 1-3, `exc` the stated reason on a group-4 food kept on purpose, and `fdc`, the USDA
-  FoodData Central ID, wherever the values came from one SR Legacy entry), `removed` (key ->
+  FoodData Central ID, wherever the values came from one SR Legacy entry, and `ff`, the Foundation
+  Foods ID, where newer Foundation values replaced some of them), `removed` (key ->
   name of the ultra-processed foods taken out), `dri` targets by `sex:age`, `ul` upper limits,
   `softUl` advisory limits. No two foods may share an `fdc`:
   that is how duplicates of a hand-corrected older food were caught.
@@ -38,7 +39,7 @@ python3 scripts/validate.py && python3 build.py && node tests/smoke.js
 ```
 The smoke test needs Playwright (CI installs it; see `.github/workflows/ci.yml`). Calories count
 toward the 27, as in the builder. Expected results at 14 foods: 27/27 at 100–102% kcal using 8–12
-foods for every pattern except carnivore (~22: no route to fiber, and it leans on organ meats),
+foods for every pattern except carnivore (~20: no route to fiber, and it leans on organ meats),
 and at most one uncommon food in each of those days (carnivore excepted). Any `OVER` line, or calories
 above 105%, fails. It also sweeps every bias ×
 pattern at 14 and 7 foods for three profiles and fails on any upper-limit breach, any portion past
@@ -49,7 +50,10 @@ inherited names like `toString` from share links), the share-link encoding and m
 ## Data rules (do not relax these)
 
 - Values are per 100 g of the food *as named* ("cooked" means cooked values, not raw ones).
-- Reference: USDA FoodData Central, SR Legacy first; iodine from the USDA/FDA/ODS Iodine Database;
+- Reference: USDA FoodData Central, SR Legacy first, with Foundation Foods values taken nutrient by
+  nutrient where the same food and form exists (`ff`; every change logged in
+  `data/audit/foundation_2026-04.json`; never a Foundation 0 over a real SR value);
+  iodine from the USDA/FDA/ODS Iodine Database;
   fortified products from their Nutrition Facts panel (convert %DV using the 2016 FDA DVs).
 - **Unknown trace nutrients = 0, never guessed.** Under-crediting is the safe direction.
 - **Sodium is always filled in** (it is a ceiling; a blank would err unsafely).
