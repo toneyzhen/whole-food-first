@@ -1,8 +1,10 @@
 # CLAUDE.md — working on Whole Food First
 
-The app was called The Complete Day until 2026-11. The repo name, the Pages URL, the
-`localStorage` keys (`completeday`, `completeday-foods`) and the backup id (`the-complete-day`)
-keep the old name on purpose: changing them would break links and wipe saved data.
+The app was called The Complete Day until 2026-11. The repo and Pages URL were renamed to
+`whole-food-first` (2026-11-24); links to the old `/the-complete-day/` address stopped working then.
+The `localStorage` keys (`completeday`, `completeday-foods`) and the backup id (`the-complete-day`)
+keep the old name on purpose: changing them would wipe saved data and reject older backups.
+(localStorage belongs to the origin, toneyzhen.github.io, so the rename kept everyone's data.)
 
 Context for Claude Code sessions. Read README.md for what the app does; this file covers how to
 change it without breaking its rules.
@@ -127,7 +129,7 @@ inherited names like `toString` from share links), the share-link encoding and m
    same food and form; only foods that read 0 were filled. Breads carry iodine from dough
    conditioners, so vegan days may lean on breadcrumbs for it.
 
-The app is published with GitHub Pages from `main` (https://toneyzhen.github.io/the-complete-day/),
+The app is published with GitHub Pages from `main` (https://toneyzhen.github.io/whole-food-first/),
 so every push to `main` goes live; commit a rebuilt `index.html` with every src/data change.
 
 ## Working with Toney (the owner)

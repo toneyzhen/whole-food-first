@@ -4,7 +4,7 @@ A single-page planner for building a day of whole and minimally processed food t
 US Dietary Reference Intakes (all 27 targets) and seeing exactly where each nutrient comes from.
 (Formerly The Complete Day.)
 
-**Use it:** https://toneyzhen.github.io/the-complete-day/ — or open `index.html` in a browser.
+**Use it:** https://toneyzhen.github.io/whole-food-first/ — or open `index.html` in a browser.
 No install, no server, no account.
 
 ## What it does
