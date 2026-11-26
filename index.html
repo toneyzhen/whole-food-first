@@ -333,8 +333,13 @@ tbody tr:hover{background:var(--sunk)}
 .chipbtn .x:hover{color:var(--rust)}
 .status{font-family:var(--display);font-size:12px;color:var(--faint)}
 
-footer{margin-top:40px;padding-top:20px;border-top:1px solid var(--rule);
-  font-family:var(--display);font-size:12.5px;color:var(--faint);max-width:76ch}
+/* notes: short headed blocks in as many columns as fit (one on phones) */
+footer{margin-top:40px;padding-top:22px;border-top:1px solid var(--rule);display:grid;
+  grid-template-columns:repeat(auto-fill,minmax(min(320px,100%),1fr));gap:18px 36px;
+  font-family:var(--display);font-size:12.5px;line-height:1.55;color:var(--faint)}
+footer h4{margin:0 0 4px;font-size:10px;font-weight:700;letter-spacing:.13em;text-transform:uppercase;
+  color:var(--muted)}
+footer p{margin:0}
 footer b{color:var(--muted);font-weight:600}
 @media (prefers-reduced-motion:reduce){*{transition:none!important}}
 </style>
@@ -573,47 +578,44 @@ footer b{color:var(--muted);font-weight:600}
 </div>
 
 <footer>
-  <b>Targets</b> are the US Dietary Reference Intakes for your selected sex and age &mdash; the RDA
-  where one exists, the Adequate Intake otherwise. <b>EPA+DHA has no DRI</b>, so it is shown for
-  information and never counted as a gap. <b>Molybdenum</b> is shown for information too: USDA
-  doesn&rsquo;t measure it, so most foods here read zero, and a shortfall would mostly be missing
-  data (legumes and grains are rich sources, and dietary deficiency is essentially unknown); its
-  upper limit is still enforced. <b>Manganese&rsquo;s</b> 11 mg upper limit is shown but not
-  enforced: whole grains, nuts and legumes routinely exceed it and dietary manganese has never been
-  shown to harm healthy people. <b>Food values</b> are USDA FoodData Central figures for the stated
-  preparation, rounded; cooking losses, soil and brand variation move real numbers by more than a few
-  percent, so treat 100% as a soft floor rather than a finish line. Iodine in seaweed varies enormously
-  &mdash; the nori figure is the Japanese food tables’ value for toasted sheets, and published
-  analyses range several-fold either side of it. Kelp is far higher and genuinely risky.
-  <b>Where a food's trace nutrient is not known with confidence it is recorded as zero</b>, not
-  guessed &mdash; so the app under-credits a food rather than over-crediting it, and a plan that
-  clears every target has margin in hand. <b>Diet patterns</b> here are food-selection rules, not
-  certifications: definitions of paleo and Whole30 vary by source, &ldquo;raw&rdquo; means the food
-  is edible as listed without cooking, and none of this speaks to how a food was produced or
-  prepared. Some patterns cannot clear every target by construction &mdash; carnivore has no
-  route to fiber or vitamin C, and no unfortified plant food contains vitamin B12 &mdash; and the
-  app will tell you so rather than pretend otherwise.
-  <b>Vitamin K counts K1 and K2 together.</b> The AI is written in K1 (phylloquinone) terms
-  because that is what intake surveys measured, but both forms are cofactors for the same
-  enzyme, so menaquinones from natto, cheese and egg yolk count toward the same target.
-  <b>Sodium is a ceiling, not a target</b>, so it is never counted as a gap: the line turns
-  amber above 2300 mg, the level the 2019 DRI review names for reducing chronic-disease risk,
-  and the AI is 1500 mg. It is also the one nutrient where blanks would have been the unsafe
-  direction, so unlike every other trace in this database it is filled in for all 1651 foods
-  from typical figures rather than left at zero. Salt added at the table is not counted unless
-  you add it &mdash; the iodized-salt entry is there for that.
-  <b>Processing levels</b> use the NOVA classification (Monteiro et al.), applied to each food as
-  it is typically sold in a US supermarket. USDA entries describe a food, not its ingredient list, so
-  a borderline food (bread, crackers, canned goods) is labeled by its common plain form; a bakery
-  loaf is group 3 even where many packaged loaves would be 4. Ultra-processed foods (group 4) are not
-  in the app, apart from two fortified plant milks kept on purpose as the food route to vitamin B12
-  on a vegan diet. Added vitamins alone don&rsquo;t move a food into group 4.
-  <b>Fortified foods</b> (the two fortified plant milks, fortified juices, iodized salt, enriched
-  bread and pasta) are marked as such and use the Nutrition Facts panel of one widely sold US product each,
-  converted to per-100 g; brands differ, so check your own carton. Nutrients a label doesn&rsquo;t
-  print are taken from the unfortified version or left at zero. To plan from unfortified food only,
-  pick <b>Fortified foods</b> under &ldquo;Also avoid&rdquo; in Auto-solve.
-  This is an arithmetic tool, not medical advice.
+  <div><h4>Targets</h4>
+    <p>The US Dietary Reference Intakes for your sex and age: the RDA where one exists, otherwise
+    the Adequate Intake. EPA+DHA (no DRI) and molybdenum (USDA doesn&rsquo;t measure it, so most foods
+    read zero) are shown for information only.</p></div>
+  <div><h4>Upper limits</h4>
+    <p>Kept for preformed vitamin A, selenium, zinc, calcium, iron, sodium and others; plant
+    carotenoids don&rsquo;t count toward the vitamin A limit. Manganese&rsquo;s 11 mg limit is shown
+    but not enforced: whole grains, nuts and legumes routinely pass it without harm.</p></div>
+  <div><h4>Food values</h4>
+    <p>USDA FoodData Central for the stated preparation, with newer Foundation Foods lab values
+    where they exist, and iodine from the USDA/FDA/ODS Iodine Database. A value that isn&rsquo;t known
+    is zero, never guessed, so a day that meets every target has margin. Real food varies by a few
+    percent or more: treat 100% as a soft floor.</p></div>
+  <div><h4>Processing levels</h4>
+    <p>NOVA groups (Monteiro et al.), applied to each food as typically sold in a US supermarket;
+    a bakery loaf is group 3 even where packaged ones would be 4. Ultra-processed foods (group 4)
+    are left out, except two fortified plant milks kept as a vegan&rsquo;s food source of B12. Added
+    vitamins alone don&rsquo;t make a food group 4.</p></div>
+  <div><h4>Fortified foods</h4>
+    <p>Fortified plant milks and juices, iodized salt, and enriched bread and pasta are marked, and
+    use the Nutrition Facts label of one widely sold US product each, so check your own carton.
+    To plan without them, pick <b>Fortified foods</b> under &ldquo;Also avoid&rdquo; in Auto-solve.</p></div>
+  <div><h4>Sodium</h4>
+    <p>A ceiling, never a gap: the bar turns amber above 2,300 mg, the level the 2019 DRI review
+    ties to chronic-disease risk (the AI is 1,500 mg). Salt at the table isn&rsquo;t counted unless
+    you add the iodized-salt entry.</p></div>
+  <div><h4>Vitamin K and iodine</h4>
+    <p>Vitamin K counts K1 and K2 together, since both serve the same enzyme. Iodine in seaweed
+    varies several-fold (the nori figure is for toasted sheets), and kelp is far higher and
+    genuinely risky.</p></div>
+  <div><h4>Diet patterns</h4>
+    <p>Food-selection rules, not certifications; &ldquo;raw&rdquo; means edible as listed without
+    cooking. Some patterns can&rsquo;t meet every target (carnivore has no fiber or vitamin C;
+    vegans need a fortified food for B12), and the app says so.</p></div>
+  <div><h4>Not medical advice</h4>
+    <p>This is arithmetic, not a diet prescription. Talk to a clinician or dietitian before big
+    changes, especially if you&rsquo;re pregnant, managing a condition, or on medication (vitamin K
+    and warfarin, for example).</p></div>
 </footer>
 </div>
 
