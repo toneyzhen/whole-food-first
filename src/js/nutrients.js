@@ -165,7 +165,7 @@ const wholeFoodSub = w => !w ? "" : [w.oil ? w.oil + "% oil" : "", w.sugar ? w.s
   .filter(Boolean).join(" · ").replace(/^./, s => "incl. " + s);
 // A counted nutrient at 85-99% of its target is roughly met: daily intake is noisy and food data
 // varies more than that, so it isn't shown as a shortfall.
-const ROUGHLY = 85;
+const ROUGHLY = 84.5;   // what shows as 85% (rounded) counts as roughly met, as 99.5% shows as 100% and counts as met
 function renderCoverage(){
   const tot = totals(plan), tg = targets(), ul = limits(), load = ulLoad(plan);
   let met = 0;

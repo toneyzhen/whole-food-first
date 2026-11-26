@@ -121,8 +121,8 @@ inherited names like `toString` from share links), the share-link encoding and m
   restored log goes through `cleanLog` (real dates, `knownOnly`, last `LOG_DAYS` = 28). Backups
   carry it as `log`; a restore adds only dates this browser doesn't have. Don't name a global
   `history`: it would shadow `window.history`, which `dropHash` uses.
-- Coverage colours: met at 99.5%, "roughly met" from `ROUGHLY` (85%) up, a gap below that; the
-  Week table uses the same thresholds.
+- Coverage colours: met at 99.5%, "roughly met" from `ROUGHLY` (84.5%: anything shown as 85% after
+  rounding) up, a gap below that; the Week table uses the same thresholds.
 - `fillMeals` places foods that have no meal (solved days) by `MEAL_SHARE` calorie shares and
   splits a portion over `SPLIT_AT` (2.2) servings over two meals; the smoke sweep checks every
   solved day's meals add up and no piece is past `SPLIT_AT`.
