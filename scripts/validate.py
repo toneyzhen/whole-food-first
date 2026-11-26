@@ -5,7 +5,7 @@
 - energy: Atwater estimate (4 protein + 9 fat + 4 net carb + 2 fiber) within 0.62-1.45 of kcal
 - fiber <= carbohydrate; fiber only in plant foods
 - vitamin B12 not in unfortified plant foods (tempeh and miso carry traces)
-- no negative values; sodium present for every food that has calories
+- no negative values
 - every food says whether it is an everyday food (common 0|1); no USDA entry (fdc) used twice
 - every food has a NOVA group 1-3 (4 only as a stated exception); removed keys aren't live foods
 """

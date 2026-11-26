@@ -184,7 +184,8 @@ GitHub Actions runs all three on every push and pull request, and fails if the c
 - With realistic portions, a complete day usually needs 9–13 foods; with a food limit of 7 or
   fewer it rarely closes every target, and calories can stay under target.
 - A few days still can't meet every nutrient within the calorie target from the allowed foods,
-  mostly at low targets (1,400–1,600 kcal). About 2% of a 2,880-day test sweep lands above 105%.
+  mostly at low targets (1,400–1,600 kcal). In the 288-day test sweep, 8 days (about 3%) land
+  above 105% of calories.
 - Carnivore reaches about 20/27: no animal food has fiber, and without liverwurst and pâté its
   vitamin A, K and E come up short.
 - A saved day that uses one of your own foods loses that food when opened in another browser,

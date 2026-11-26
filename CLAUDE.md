@@ -52,7 +52,9 @@ inherited names like `toString` from share links), the share-link encoding and m
 - Values are per 100 g of the food *as named* ("cooked" means cooked values, not raw ones).
 - Reference: USDA FoodData Central, SR Legacy first, with Foundation Foods values taken nutrient by
   nutrient where the same food and form exists (`ff`; every change logged in
-  `data/audit/foundation_2026-04.json`; never a Foundation 0 over a real SR value);
+  `data/audit/foundation_2026-04.json`; never a Foundation 0 over a real SR value). To refresh from
+  a new Foundation release, run `scripts/foundation.py <release zip>` (matches live in
+  `data/audit/foundation_matches.json`);
   iodine from the USDA/FDA/ODS Iodine Database;
   fortified products from their Nutrition Facts panel (convert %DV using the 2016 FDA DVs).
 - **Unknown trace nutrients = 0, never guessed.** Under-crediting is the safe direction.
@@ -124,10 +126,11 @@ inherited names like `toString` from share links), the share-link encoding and m
 
 1. Solver pipeline after the main loop: `tune` → `trimKcal` → `swapLeaner` (only on days over
    104% kcal; fixed search size so results are deterministic) → `topUp` → `roundPortions`.
-   About 2% of days still land above 105% kcal, mostly at 1,400–1,600 kcal targets.
+   About 3% of days (8 of the 288 in the sweep) still land above 105% kcal, mostly at
+   1,400–1,600 kcal targets.
 2. `suggest` discounts a food by how much of the room left under each upper limit it would use
-   (exponent 1.5, tuned on the 288-day sweep: fully met 126 at 14 foods and 41 at 7, 1 day under
-   90% kcal, 8 over 105%). Without it, fortified cereals used up the iron room and vegan days
+   (exponent 1.5, tuned on the 288-day sweep). Current sweep (2026-11-25): fully met 126 at 14 foods
+   and 50 at 7, 0 days under 90% kcal, 8 over 105%, 0 limit/portion/mains problems. Without it, fortified cereals used up the iron room and vegan days
    stalled near 60% kcal. Check those sweep numbers again after adding foods.
 3. Top-up picks the most energy-dense ordinary staple; it could choose by nutrient fit instead.
 4. Search ranking (`searchRank` in builder.js) is hand-tuned on common queries (rice, chicken,
