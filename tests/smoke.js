@@ -124,6 +124,12 @@ const DIETS = ["anything","pescatarian","vegetarian","vegan","paleo","whole30","
     search.value = "spleen"; runSearch();   // only uncommon foods match: shown anyway
     ok(hits.length > 0 && hits.every(f => f.common === 0), "uncommon-only search");
     search.value = ""; runSearch();
+    // recent foods: every add moves the food to the front; stored keys are cleaned like any input
+    plan = {}; meals = {}; rowOrder = []; recent = [];
+    addFood("oats"); addFood("salmon"); addFood("oats");
+    ok(recent.join() === "oats,salmon", "recent order");
+    ok(cleanRecent(["salmon_farmed", "toString", "oats", 5, "oats"]).join() === "salmon,oats", "cleanRecent");
+    plan = {}; meals = {}; rowOrder = []; recent = [];
     // the calorie trim never removes a food the user kept
     profile = {sex: "male", age: 40, kcal: 2500};
     const seed = {oliveoil: 10, butter: 10, walnut: 200, peanut: 200, milk: 244};
@@ -133,6 +139,21 @@ const DIETS = ["anything","pescatarian","vegetarian","vegan","paleo","whole30","
   });
   console.log(`unit checks: ${unit.length ? unit.join('; ') : 'ok'}`);
   unit.forEach(u => errors.push(u));
+
+  // A phone (375 px, touch): nothing may widen the page (a one-line row of recent foods once
+  // stretched the layout grid to 1,200 px), and inputs need 16 px text or iOS zooms on focus.
+  const phone = await browser.newPage({viewport: {width: 375, height: 812}, hasTouch: true, isMobile: true});
+  phone.on('pageerror', e => errors.push(e.message));
+  await phone.goto('file://' + path.resolve(__dirname, '..', 'index.html'));
+  const mobile = await phone.evaluate(() => {
+    ["oats", "salmon", "spinach", "lentil", "almond", "egg", "sweetpot", "milk", "blueberry", "tilapia"].forEach(k => addFood(k));
+    return {wide: document.documentElement.scrollWidth > innerWidth,
+            small: [...document.querySelectorAll("input:not([type=checkbox]):not([type=file]),select")]
+              .filter(el => el.offsetParent && parseFloat(getComputedStyle(el).fontSize) < 16).map(el => el.id || el.className)};
+  });
+  console.log(`phone layout: ${mobile.wide ? "WIDER THAN THE SCREEN" : "fits"}, inputs under 16 px: ${mobile.small.length}`);
+  if (mobile.wide) errors.push("phone: page wider than the screen");
+  if (mobile.small.length) errors.push("phone: inputs under 16 px: " + mobile.small.join(", "));
   await browser.close();
   if (errors.length){ console.error(errors); process.exit(1); }
 })();

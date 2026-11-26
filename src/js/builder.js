@@ -137,6 +137,7 @@ function renderPlan(){
   // pin the order just shown: new rows keep their place, removed rows don't linger
   rowOrder = MEALS.flatMap((_, i) => mealRows(i).map(k => k + "@" + i));
   renderCoverage();
+  renderRecent();
   persistLocal();
 }
 
@@ -195,12 +196,31 @@ function syncCursor(){
   else search.removeAttribute("aria-activedescendant");
 }
 // Adds to the meal picked next to search: a new row there, or more of the row already there.
+// Every way of adding a food comes through here, so it also keeps the recent-foods list.
 function addFood(k, grams){
   meals = fillMeals(plan, meals);
   const have = (meals[k] && meals[k][addMeal]) || 0;
   setPortion(k, addMeal, have + (grams != null ? grams : BY[k].serv));
+  recent = [k, ...recent.filter(x => x !== k)].slice(0, RECENT_MAX);
   renderPlan();
 }
+// Recent foods: one tap to add again, since most days reuse the same foods. Stored with the day
+// (persistLocal); entries from outside go through cleanRecent like any other food key.
+const RECENT_MAX = 10;
+let recent = [];
+const cleanRecent = r => Array.isArray(r)
+  ? [...new Set(r.filter(k => typeof k === "string").map(renamed))]
+      .filter(k => Object.prototype.hasOwnProperty.call(BY, k)).slice(0, RECENT_MAX) : [];
+function renderRecent(){
+  const box = document.getElementById("recent"), ks = cleanRecent(recent);
+  box.hidden = !ks.length;
+  box.innerHTML = `<span class="k">Recent</span>` + ks.map(k =>
+    `<button class="chip" data-recent="${k}" title="${BY[k].name}"
+       aria-label="Add one serving of ${BY[k].name} to ${MEALS[addMeal].toLowerCase()}">${BY[k].name}</button>`).join("");
+}
+document.getElementById("recent").addEventListener("click", e => {
+  const b = e.target.closest("[data-recent]"); if (b) addFood(b.dataset.recent);
+});
 search.addEventListener("input", runSearch);
 for (const c of [searchCat, searchUnc]) c.addEventListener("change", () => { if (search.value.trim()) runSearch(); });
 search.addEventListener("keydown", e => {
@@ -257,6 +277,9 @@ let drag = null;
 planBox.addEventListener("pointerdown", e => {
   const g = e.target.closest("[data-grip]"); if (!g || e.button > 0) return;
   e.preventDefault();
+  // a touch is captured by the handle automatically; release it, since the row (and the handle
+  // with it) moves in the DOM as it is dragged, and the document listeners below do the tracking
+  if (g.hasPointerCapture && g.hasPointerCapture(e.pointerId)) g.releasePointerCapture(e.pointerId);
   const row = g.closest(".prow");
   // Listen on the document rather than capturing the pointer: moving the row in the DOM
   // would drop a capture and end the drag after the first step.

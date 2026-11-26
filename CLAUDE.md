@@ -111,6 +111,12 @@ inherited names like `toString` from share links), the share-link encoding and m
   in the same `localStorage` entry (`saved`, ids prefixed `local-`). Saved-day names are user
   input (and shared across viewers in the artifact db): always render them through `esc()`.
 - Keep it one self-contained file: no external scripts; Google Fonts is the only external request.
+- Recent foods (`recent`, builder.js) are recorded in `addFood`, which every add path uses, and
+  stored with the current day; stored keys pass through `cleanRecent`.
+- Phones: touch-only sizing lives in one `@media (pointer:coarse)` block (finger-sized targets,
+  16 px inputs so iOS doesn't zoom). On narrow screens `.split` must stay `minmax(0,1fr)`: a plain
+  `1fr` grows to fit unbreakable content (a one-line chip row once made the page 1,200 px wide).
+  smoke.js opens a 375 px touch page and fails if it scrolls sideways or an input is under 16 px.
 - Light and dark themes are CSS custom properties on `:root`; keep both working, and keep the
   layout usable at 390 px wide with no horizontal scroll.
 

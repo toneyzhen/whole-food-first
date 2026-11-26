@@ -1,6 +1,6 @@
 /* ---------------- persistence ---------------- */
 function persistLocal(){
-  try { localStorage.setItem("completeday", JSON.stringify({plan, meals, rowOrder, addMeal, profile,
+  try { localStorage.setItem("completeday", JSON.stringify({plan, meals, rowOrder, addMeal, profile, recent,
     avoid:[...avoid], sugOff:[...sugOff],
     saved: savedCache.filter(x => x.id.startsWith("local-"))})); } catch (e) {}
 }
@@ -10,6 +10,8 @@ function restoreLocal(){
     const s = JSON.parse(localStorage.getItem("completeday") || "null");
     if (s && s.plan){ plan = knownOnly(s.plan); meals = cleanMeals(s.meals); rowOrder = cleanOrder(s.rowOrder);
       noteRemoved(s.plan);
+      // before this list existed, start it from the foods in the current day
+      recent = Array.isArray(s.recent) ? cleanRecent(s.recent) : cleanRecent(Object.keys(plan));
       if (MEALS[s.addMeal]) addMeal = s.addMeal;
       if (s.profile) profile = s.profile;
       if (s.avoid) avoid = new Set(s.avoid);

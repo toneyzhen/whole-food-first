@@ -1,7 +1,7 @@
 /* ---------------- boot ---------------- */
 const addMealSel = document.getElementById("addmeal");
 addMealSel.innerHTML = MEALS.map((m, i) => `<option value="${i}">Add to ${m.toLowerCase()}</option>`).join("");
-addMealSel.addEventListener("change", () => { addMeal = +addMealSel.value; persistLocal(); });
+addMealSel.addEventListener("change", () => { addMeal = +addMealSel.value; renderRecent(); persistLocal(); });
 restoreLocal();
 addMealSel.value = String(addMeal);
 renderCustomList();
