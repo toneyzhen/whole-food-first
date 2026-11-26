@@ -26,6 +26,9 @@ function guessMeal(k){
 // split: meal index -> grams. plan[k] stays the day's total for that food, which is all the
 // coverage panel, suggestions and solver need. Older data stored one meal index per food.
 const MEAL_IDS = ["0", "1", "2", "3"];
+// rough calorie shares of breakfast, lunch, dinner and snacks, used to place a solved day's foods
+const MEAL_SHARE = [0.25, 0.30, 0.35, 0.10];
+const SPLIT_AT = 2.2;   // servings: a guessed portion bigger than this is split over two meals
 // splits for every food in p: keep m's split (an old single index counts as the whole amount),
 // scaled to p's total if they disagree; guess a meal for the rest
 function fillMeals(p, m){
@@ -39,13 +42,34 @@ function fillMeals(p, m){
     const parts = MEAL_IDS.filter(i => +v[i] > 0), sum = parts.reduce((a, i) => a + +v[i], 0);
     parts.forEach(i => put(k, +i, +v[i] * p[k] / sum));
   }
-  // mains first, so the calorie balance afterwards works around them
-  const rest = Object.keys(p).filter(k => !(k in out)).sort((a, b) => isMain(b) - isMain(a));
+  // Foods with no meal yet (a solved day, older data) are placed so the day reads like meals:
+  // mains first, then the biggest foods, each into the meal furthest below its calorie share,
+  // and a portion over SPLIT_AT servings goes in two pieces (three cups of milk: breakfast and a
+  // snack, not all at breakfast).
+  const goal = MEAL_SHARE.map(s => s * Object.keys(p).reduce((a, k) => a + kcalOf(k, p[k]), 0));
+  const room = i => goal[i] - kc[i];
+  const rest = Object.keys(p).filter(k => !(k in out))
+    .sort((a, b) => isMain(b) - isMain(a) || kcalOf(b, p[b]) - kcalOf(a, p[a]));
   for (const k of rest){
-    let i = guessMeal(k);
-    if (i === null) i = isMain(k) && mains[1] !== mains[2] ? (mains[1] < mains[2] ? 1 : 2)
-                      : kc[1] <= kc[2] ? 1 : 2;
-    put(k, i, p[k]);
+    if (isMain(k)){   // one main each for lunch and dinner, then by calories
+      put(k, mains[1] !== mains[2] ? (mains[1] < mains[2] ? 1 : 2) : room(1) >= room(2) ? 1 : 2, p[k]);
+      continue;
+    }
+    const g0 = guessMeal(k);
+    // where this kind of food goes: breakfast foods to breakfast (then a snack), fruit and nuts to
+    // snacks (then breakfast), everything else to lunch or dinner
+    const opts = g0 === 0 ? [0, 3] : g0 === 3 ? [3, 0] : [1, 2];
+    const pieces = p[k] > SPLIT_AT * BY[k].serv
+      ? [Math.round(p[k] / 2 / 5) * 5, 0].map((g, j, a) => j ? p[k] - a[0] : g) : [p[k]];
+    let used = null;
+    for (const g of pieces){
+      // first choice of its kind unless that meal is already well past its share; a second piece
+      // goes to the other meal of its kind
+      const i = used !== null ? opts.find(x => x !== used)
+              : g0 !== null ? (room(opts[0]) > -0.3 * goal[opts[0]] ? opts[0] : opts[1])
+              : room(1) >= room(2) ? 1 : 2;
+      put(k, i, g); used = i;
+    }
   }
   // keep the plan's own order for display: rebuild out in p's key order
   const ordered = {}; for (const k in p) ordered[k] = out[k];

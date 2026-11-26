@@ -18,6 +18,7 @@ if (!Object.keys(plan).length){
   plan = {oats:60, milk:240, egg:100, spinach:150, salmon:113, sweetpot:200, almond:28, lentil:150};
 }
 renderPlan();
+planAtStart = JSON.stringify(plan);   // from here on, a change to the day logs it for the week view
 showTab("build");
 initDb();
 // A shared day never replaces today's without asking.
@@ -53,5 +54,6 @@ addEventListener("storage", e => {
     savedCache = savedCache.filter(x => !x.id.startsWith("local-"))
       .concat(s && Array.isArray(s.saved) ? s.saved : []);
     renderSaved(savedCache);
+    if (s) dayLog = cleanLog(s.log);
   } catch (err) {}
 });

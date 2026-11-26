@@ -42,6 +42,14 @@ const DIETS = ["anything","pescatarian","vegetarian","vegan","paleo","whole30","
           const big = Object.keys(p).filter(k => p[k] > capOf(k) + 5);
           if (big.length) out.push(`PORTION ${at}: ${big.map(k => `${k} ${p[k]} g`)}`);
           if (diet !== "carnivore" && Object.keys(p).filter(isMain).length > MAX_MAINS) out.push(`MAINS ${at}`);
+          // meals: every food's pieces add up to its total, no piece is past SPLIT_AT servings
+          // (2-3 servings of a food once all landed in one meal), and lunch and dinner both exist
+          const m = fillMeals(p, {}), keys = Object.keys(p);
+          const badSum = keys.filter(k => Math.abs(Object.values(m[k]).reduce((a, g) => a + g, 0) - p[k]) > 0.5);
+          const tooBig = keys.filter(k => Object.values(m[k]).some(g => g > SPLIT_AT * BY[k].serv + 5));
+          if (badSum.length || tooBig.length) out.push(`MEALS ${at}: ${badSum.concat(tooBig)}`);
+          if (keys.length >= 6 && ![1, 2].every(i => keys.some(k => m[k][i] > 0))) out.push(`NO LUNCH/DINNER ${at}`);
+          if (diet === "carnivore" && keys.some(k => /\b(grain|addedsugar)\b/.test(BY[k].tags))) out.push(`CARNIVORE GRAIN ${at}`);
         }
     }
     return out;
@@ -117,6 +125,23 @@ const DIETS = ["anything","pescatarian","vegetarian","vegan","paleo","whole30","
     const wf = wholeFoodPct({oats: 100, cheddar: 100}), kO = BY.oats.n[IDX.kcal], kC = BY.cheddar.n[IDX.kcal];
     ok(BY.oats.nova === 1 && BY.cheddar.nova === 3 && wf === Math.round(100 * kO / (kO + kC)), "whole-food score");
     ok(wholeFoodPct({}) === null, "whole-food score of an empty day");
+    // oil and sugar are NOVA 2, so they count as whole food; the score names their share apart
+    const wo = wholeFood({oats: 100, oliveoil: 10, honey: 21});
+    ok(wo.oil > 0 && wo.sugar > 0 && wo.pct === 100 && /oil/.test(wholeFoodSub(wo)) && /sugar/.test(wholeFoodSub(wo)),
+       "oil and sugar shares: " + JSON.stringify(wo));
+    // the week log: an unchanged day isn't logged, a changed one is under today's date, and a
+    // stored log keeps only real dates and known foods
+    const was = JSON.stringify(plan), logWas = dayLog;
+    dayLog = {}; planAtStart = JSON.stringify(plan); persistLocal();
+    ok(!Object.keys(dayLog).length, "an unchanged day was logged");
+    plan = Object.assign({}, plan, {banana: 118}); persistLocal();
+    ok(dayLog[dateKey()] && dayLog[dateKey()].banana === 118, "a changed day wasn't logged");
+    const cl = cleanLog({"2026-01-02": {oats: 50, nope: 9}, "x": {oats: 1}, "2026-01-03": "oats", "toString": {oats: 1}});
+    ok(JSON.stringify(cl) === '{"2026-01-02":{"oats":50}}', "cleanLog: " + JSON.stringify(cl));
+    showTab("week");
+    ok(document.querySelectorAll("#wktable tbody tr").length === TARGETS
+       && document.querySelectorAll("#wktable thead th").length === 9, "week table shape");
+    showTab("build"); plan = JSON.parse(was); dayLog = logWas; planAtStart = null;
     // search: every word must match, and the plain cooked everyday food ranks first
     search.value = "chicken breast"; runSearch();
     ok(hits.length && hits.every(f => /chicken/i.test(f.name) && /breast/i.test(f.name)) &&
@@ -163,7 +188,10 @@ const DIETS = ["anything","pescatarian","vegetarian","vegan","paleo","whole30","
   await phone.goto('file://' + path.resolve(__dirname, '..', 'index.html'));
   const mobile = await phone.evaluate(() => {
     ["oats", "salmon", "spinach", "lentil", "almond", "egg", "sweetpot", "milk", "blueberry", "tilapia"].forEach(k => addFood(k));
-    return {wide: document.documentElement.scrollWidth > innerWidth,
+    showTab("week");
+    const weekWide = document.documentElement.scrollWidth > innerWidth;
+    showTab("build");
+    return {wide: weekWide || document.documentElement.scrollWidth > innerWidth,
             small: [...document.querySelectorAll("input:not([type=checkbox]):not([type=file]),select")]
               .filter(el => el.offsetParent && parseFloat(getComputedStyle(el).fontSize) < 16).map(el => el.id || el.className)};
   });

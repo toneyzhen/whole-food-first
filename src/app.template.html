@@ -169,6 +169,7 @@ body.reordering{user-select:none;-webkit-user-select:none;cursor:grabbing}
   font-variant-numeric:tabular-nums;line-height:1.25}
 .sumcell .v.bad{color:var(--rust)}
 .sumcell .v.good{color:var(--pine)}
+.sumcell .sub{display:block;margin-top:2px;font-family:var(--display);font-size:10.5px;color:var(--faint)}
 .covtools{display:flex;justify-content:space-between;align-items:center;gap:10px;
   padding:9px 14px;border-bottom:1px solid var(--rule);background:var(--sunk)}
 .mini{font-family:var(--display);font-size:11px;font-weight:600;letter-spacing:.07em;
@@ -193,6 +194,9 @@ body.reordering{user-select:none;-webkit-user-select:none;cursor:grabbing}
   font-variant-numeric:tabular-nums}
 .nrow.gap .npct{color:var(--rust);font-weight:600}
 .nrow.over .npct{color:var(--ochre);font-weight:600}
+/* roughly met (85-99%): not a shortfall, just short of the line */
+.nrow.near .nbar i{opacity:.55}
+.nrow.near .npct{color:var(--pine)}
 .namt{display:block;margin-top:3px;font-family:var(--mono);font-size:11px;
   color:var(--faint);font-variant-numeric:tabular-nums;text-align:right}
 .info{border:none;background:none;color:var(--faint);font-size:11px;padding:0 2px;
@@ -319,6 +323,10 @@ td{padding:8px 12px;border-bottom:1px solid var(--rule);text-align:right;
 td:first-child{font-family:var(--display);font-size:13.5px;color:var(--ink);font-weight:500}
 td.cat{font-family:var(--display);font-size:11.5px;color:var(--muted);text-align:left}
 tbody tr:hover{background:var(--sunk)}
+#wktable td.gap{color:var(--rust);background:var(--rust-soft)}
+#wktable td.near{color:var(--pine)}
+#wktable td.none{color:var(--faint)}
+#wktable th:nth-child(2),#wktable td:nth-child(2){font-weight:700;border-right:1px solid var(--rule-hard)}
 .addcell button{font-family:var(--display);font-size:11px;font-weight:600;padding:3px 9px;
   border:1px solid var(--rule);border-radius:100px;background:none;color:var(--pine)}
 .addcell button:hover{background:var(--pine-soft)}
@@ -373,6 +381,7 @@ footer b{color:var(--muted);font-weight:600}
     <button class="tab" role="tab" id="tab-build" aria-controls="p-build" aria-selected="true">Build a day</button>
     <button class="tab" role="tab" id="tab-solve" aria-controls="p-solve" aria-selected="false">Auto-solve</button>
     <button class="tab" role="tab" id="tab-browse" aria-controls="p-browse" aria-selected="false">Food ranking</button>
+    <button class="tab" role="tab" id="tab-week" aria-controls="p-week" aria-selected="false">Week</button>
   </div>
 </header>
 
@@ -489,7 +498,8 @@ footer b{color:var(--muted);font-weight:600}
         <div class="sumcell"><span class="k">Targets met</span><span class="v" id="s-met">0/27</span></div>
         <div class="sumcell"><span class="k">Calories</span><span class="v" id="s-kcal">0</span></div>
         <div class="sumcell" title="Share of calories from NOVA group 1 (unprocessed or minimally processed) and group 2 (cooking ingredients). The rest is group 3 processed food and the two fortified-milk exceptions; your own foods are left out.">
-          <span class="k">Whole food</span><span class="v" id="s-whole">&mdash;</span></div>
+          <span class="k">Whole food</span><span class="v" id="s-whole">&mdash;</span>
+          <span class="sub" id="s-whole-sub"></span></div>
         <div class="sumcell"><span class="k">Food weight</span><span class="v" id="s-mass">0 g</span></div>
       </div>
       <div class="covtools">
@@ -540,6 +550,9 @@ footer b{color:var(--muted);font-weight:600}
         <span class="ctl-label" id="avoidlab">Also avoid</span>
         <div class="chips" role="group" aria-labelledby="avoidlab" id="avoidchips"></div>
         <p class="avoidnote" id="poolnote"></p>
+        <p class="avoidnote"><b>A convenience, not a guarantee.</b> Exclusions go by the tags each food
+          was given from its USDA description, and products differ (a bread may contain milk, a sauce
+          may contain fish). If you have an allergy, check the label of what you actually buy.</p>
       </div>
       <div class="solvenote">The solver picks foods greedily by how much of the remaining gap a
         serving of each closes, weighting nutrients by how few foods supply them at all &mdash; so
@@ -580,6 +593,17 @@ footer b{color:var(--muted);font-weight:600}
   </div>
 </div>
 
+<!-- ============================ WEEK ============================ -->
+<div class="panel" id="p-week" role="tabpanel" aria-labelledby="tab-week" hidden>
+  <div class="card" style="margin-top:24px">
+    <h3>Your last seven days</h3>
+    <p class="rowhint" id="wk-note" style="margin:0;padding:14px 18px 12px"></p>
+    <div class="tblwrap"><table id="wktable"><thead></thead><tbody></tbody></table></div>
+    <p class="avoidnote" style="padding:10px 18px 14px">Each date shows the day as you last left it in
+    Build a day on that date, against your current targets. Kept in this browser only (backups include it).</p>
+  </div>
+</div>
+
 <footer>
   <div><h4>Targets</h4>
     <p>The US Dietary Reference Intakes for your sex and age: the RDA where one exists, otherwise
@@ -614,7 +638,8 @@ footer b{color:var(--muted);font-weight:600}
   <div><h4>Diet patterns</h4>
     <p>Food-selection rules, not certifications; &ldquo;raw&rdquo; means edible as listed without
     cooking. Some patterns can&rsquo;t meet every target (carnivore has no fiber or vitamin C;
-    vegans need a fortified food for B12), and the app says so.</p></div>
+    vegans need a fortified food for B12), and the app says so. Allergen exclusions are a convenience,
+    not a guarantee: always check the label of the product you buy.</p></div>
   <div><h4>Not medical advice</h4>
     <p>This is arithmetic, not a diet prescription. Talk to a clinician or dietitian before big
     changes, especially if you&rsquo;re pregnant, managing a condition, or on medication (vitamin K

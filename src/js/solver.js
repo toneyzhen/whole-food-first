@@ -362,20 +362,21 @@ function planCard(p, i, opts){
   return `<div class="card" style="margin-bottom:14px">
     <h3>${ok ? "Complete day" : "Best found"} &mdash; ${keys.length} foods</h3>
     <div id="sv-${i}">${MEALS.map((_, mi) => {
-      const mk = keys.filter(k => m[k][mi] > 0);   // a solved day puts each food in one meal
-      return mk.length ? mealHeader(mi, mk.reduce((a, k) => a + kcalOf(k, p[k]), 0), false)
+      const mk = keys.filter(k => m[k][mi] > 0);   // a big portion can be split over two meals
+      return mk.length ? mealHeader(mi, mk.reduce((a, k) => a + kcalOf(k, m[k][mi]), 0), false)
         + mk.map(k => `<div class="prow"><span>
       <span class="pname">${BY[k].name}</span>${novaTag(BY[k])}
-      <span class="pmeta">${p[k]} g &middot; ${(p[k]/BY[k].serv).toFixed(1)} × ${BY[k].sl}</span>
+      <span class="pmeta">${Math.round(m[k][mi])} g &middot; ${(m[k][mi]/BY[k].serv).toFixed(1)} × ${BY[k].sl}</span>
       </span><span class="mono" style="font-size:12.5px;color:var(--muted)">${
-        Math.round(BY[k].n[IDX.kcal]*p[k]/100)} kcal</span></div>`).join("") : "";
+        Math.round(kcalOf(k, m[k][mi]))} kcal</span></div>`).join("") : "";
     }).join("")}</div>
     <div class="sum four" style="border-bottom:none;border-top:1px solid var(--rule)">
       <div class="sumcell"><span class="k">Targets met</span>
         <span class="v ${ok?"good":"bad"}">${TARGETS - e.short.length}/${TARGETS}</span></div>
       <div class="sumcell"><span class="k">Calories</span><span class="v">${e.kcal}</span></div>
       <div class="sumcell" title="Share of calories from NOVA group 1 (unprocessed or minimally processed) and group 2 (cooking ingredients)">
-        <span class="k">Whole food</span><span class="v">${wholeFoodPct(p) === null ? "—" : wholeFoodPct(p) + "%"}</span></div>
+        <span class="k">Whole food</span><span class="v">${wholeFoodPct(p) === null ? "—" : wholeFoodPct(p) + "%"}</span>
+        <span class="sub">${wholeFoodSub(wholeFood(p))}</span></div>
       <div class="sumcell"><span class="k">Weight</span><span class="v">${e.mass} g</span></div>
     </div>
     <div class="solvenote" style="padding-top:12px">Net carbs

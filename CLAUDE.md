@@ -39,7 +39,7 @@ python3 scripts/validate.py && python3 build.py && node tests/smoke.js
 ```
 The smoke test needs Playwright (CI installs it; see `.github/workflows/ci.yml`). Calories count
 toward the 27, as in the builder. Expected results at 14 foods: 27/27 at 100–102% kcal using 8–12
-foods for every pattern except carnivore (~20: no route to fiber, and it leans on organ meats),
+foods for every pattern except carnivore (~21: no route to fiber, and it leans on organ meats),
 and at most one uncommon food in each of those days (carnivore excepted). Any `OVER` line, or calories
 above 105%, fails. It also sweeps every bias ×
 pattern at 14 and 7 foods for three profiles and fails on any upper-limit breach, any portion past
@@ -115,6 +115,17 @@ inherited names like `toString` from share links), the share-link encoding and m
 - Keep it one self-contained file: no external scripts; Google Fonts is the only external request.
 - Recent foods (`recent`, builder.js) are recorded in `addFood`, which every add path uses, and
   stored with the current day; stored keys pass through `cleanRecent`.
+- The Week tab reads `dayLog` (storage.js; stored as `log`): local date `YYYY-MM-DD` -> that date's
+  plan. `persistLocal` logs today only once the plan differs from `planAtStart` (set in boot.js
+  after the first render), so opening the app never logs anything by itself. Every stored or
+  restored log goes through `cleanLog` (real dates, `knownOnly`, last `LOG_DAYS` = 28). Backups
+  carry it as `log`; a restore adds only dates this browser doesn't have. Don't name a global
+  `history`: it would shadow `window.history`, which `dropHash` uses.
+- Coverage colours: met at 99.5%, "roughly met" from `ROUGHLY` (85%) up, a gap below that; the
+  Week table uses the same thresholds.
+- `fillMeals` places foods that have no meal (solved days) by `MEAL_SHARE` calorie shares and
+  splits a portion over `SPLIT_AT` (2.2) servings over two meals; the smoke sweep checks every
+  solved day's meals add up and no piece is past `SPLIT_AT`.
 - Phones: touch-only sizing lives in one `@media (pointer:coarse)` block (finger-sized targets,
   16 px inputs so iOS doesn't zoom). On narrow screens `.split` must stay `minmax(0,1fr)`: a plain
   `1fr` grows to fit unbreakable content (a one-line chip row once made the page 1,200 px wide).

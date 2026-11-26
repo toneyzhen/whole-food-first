@@ -38,7 +38,7 @@ const DIETS = {
   keto:         {label:"Keto",          cls:ALLCLS, netCarbMax:30},
   lowcarb:      {label:"Low-carb",      cls:ALLCLS, netCarbMax:100},
   highprotein:  {label:"High-protein",  cls:ALLCLS, proteinPct:25},
-  carnivore:    {label:"Carnivore",     cls:["dairy","egg","fish","meat"]},
+  carnivore:    {label:"Carnivore",     cls:["dairy","egg","fish","meat"], no:["grain","addedsugar"]},
   raw:          {label:"Raw",           cls:ALLCLS, rawOnly:true},
 };
 const AVOIDABLE = [["dairy","Dairy"],["egg","Eggs"],["gluten","Gluten"],["peanut","Peanuts"],

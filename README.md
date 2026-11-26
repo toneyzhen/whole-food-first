@@ -13,8 +13,10 @@ No install, no server, no account.
 1.25 servings), and drag to reorder. The day is split into breakfast, lunch, dinner and snacks,
 with calories per meal; drag a food (or use the arrow keys) to move it between meals. The same
 food can appear in more than one meal: pick the meal next to the search box and add it again. A coverage
-panel shows every target as a bar, with gaps and upper-limit breaches highlighted, and a
-**whole-food score**: the share of the day's calories from NOVA group 1 and 2 foods.
+panel shows every target as a bar: gaps (under 85%), roughly met (85–99%, marked ≈) and
+upper-limit breaches are highlighted. A **whole-food score** gives the share of the day's calories
+from NOVA group 1 and 2 foods, and names how much of it is oil and how much sugar or honey (both
+group 2, so they count as whole food, but they are not what the score is meant to reward).
 
 **Recent foods.** Your six most recently added foods sit in one line under the search box, one
 tap each to add a serving again (they're kept in this browser).
@@ -54,7 +56,9 @@ servings you could add, one tap each.
 - Macro patterns: keto (≤30 g net carb), low-carb (≤100 g), high-protein (≥25% kcal),
   paleo, Whole30, Mediterranean, carnivore, raw
 - Exclusions that stack with any pattern: dairy, eggs, gluten, peanuts, tree nuts, soy, fish,
-  shellfish, sesame, nightshades, fortified foods
+  shellfish, sesame, nightshades, fortified foods. They are a convenience, not a guarantee: they
+  go by the tags each food was given from its USDA description, and real products differ. With an
+  allergy, check the label of what you buy.
 - Biases: balanced, fewest foods, least food weight, ordinary groceries
 
 It picks foods greedily by how much of the remaining gap one serving of each closes, weighting
@@ -73,7 +77,10 @@ the foods already in the day (trimming an iron- or calcium-heavy portion to make
 is close), adding an ordinary staple, or as a last resort a cooking fat. If the day runs over,
 it trims whatever portion costs no nutrient, then tries swapping a food for a leaner one that
 covers the same nutrients. Portions are rounded to 5 g (0.5 g for salt, spices and the like)
-without crossing an upper limit. The result is split into meals.
+without crossing an upper limit. The result is split into meals: one main each at lunch and
+dinner, breakfast foods at breakfast, fruit and nuts as snacks, and everything else into whichever
+meal is furthest below its rough share of calories (25% breakfast, 30% lunch, 35% dinner, 10%
+snacks). A portion over 2.2 servings is split over two meals.
 
 **Food ranking.** Rank every food by **overall nutrient density** (the average share of your 26
 nutrient targets it supplies, each capped at 100% so one huge value can't carry the score, with
@@ -81,6 +88,12 @@ the nutrients it's best for) or by any single nutrient, per serving, per 100 g o
 across all foods or any set of categories you pick.
 Per 100 kcal favors low-calorie foods like leafy greens; per serving shows what a normal portion
 delivers. Foods under 10 kcal per 100 g (coffee, tea) aren't ranked per 100 kcal.
+
+**Week.** Each date you change your day in Build a day, the day is logged under that date (as you
+last left it). The Week tab shows the last seven dates against your targets, newest first, with
+the average of the logged days beside them, since several nutrients (vitamins A, D and B12) are
+stored and a week's average matters more than any single day. The last 28 dates are kept, in this
+browser only.
 
 **Your own foods.** Copy a Nutrition Facts label (per serving, as printed) and the app converts
 it to per 100 g. Blank nutrients count as zero, like the built-in data; calories and sodium are
@@ -96,7 +109,7 @@ in this browser's `localStorage`.
 **Share links and backups.** "Share link" puts the current day, with its meals and any of your
 own foods it uses, into the link itself (after the `#`, which browsers never send to a server),
 so nothing is uploaded. Opening a link asks before it replaces your day. "Download backup" saves
-your saved days and your own foods to a file; "Restore from file" adds them back, on this or
+your saved days, your logged days and your own foods to a file; "Restore from file" adds them back, on this or
 another device, without replacing anything. Links and files are treated as untrusted input.
 
 ## Targets
@@ -191,8 +204,9 @@ GitHub Actions runs all three on every push and pull request, and fails if the c
 - A few days still can't meet every nutrient within the calorie target from the allowed foods,
   mostly at low targets (1,400–1,600 kcal). In the 288-day test sweep, 8 days (about 3%) land
   above 105% of calories.
-- Carnivore reaches about 20/27: no animal food has fiber, and without liverwurst and pâté its
-  vitamin A, K and E come up short.
+- Carnivore reaches about 21/27: no animal food has fiber, and without liverwurst and pâté its
+  vitamin A, K and E come up short. It also leaves out animal foods made with grain or added sugar
+  (fresh pasta, gefilte fish).
 - A saved day that uses one of your own foods loses that food when opened in another browser,
   unless it arrives through a share link or a backup file.
 

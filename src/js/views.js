@@ -75,16 +75,44 @@ document.querySelector("#brtable").addEventListener("click", e => {
   b.textContent = "Added"; setTimeout(() => { b.textContent = "Add"; }, 1100);
 });
 
+/* ---------------- week ---------------- */
+// The last seven dates, each the day as you last left it on that date, against today's targets.
+function renderWeek(){
+  const t = targets(), days = [];
+  // newest first, after the average, so a phone shows the useful columns without scrolling
+  for (let i = 0; i < 7; i++){ const d = new Date(); d.setDate(d.getDate() - i); days.push(dateKey(d)); }
+  const logged = days.filter(d => dayLog[d]), tot = Object.fromEntries(logged.map(d => [d, totals(dayLog[d])]));
+  const ns = ["kcal"].concat(COUNTED).filter(n => t[n]);
+  const pct = (v, n) => 100 * v / t[n];
+  const cell = p => p === null ? `<td class="none">&mdash;</td>`
+    : p >= 99.5 ? `<td>${Math.round(p)}%</td>`
+    : `<td class="${p >= ROUGHLY ? "near" : "gap"}">${p >= ROUGHLY ? "\u2248" : ""}${Math.round(p)}%</td>`;
+  const avgs = ns.map(n => logged.length ? pct(logged.reduce((a, d) => a + tot[d][IDX[n]], 0) / logged.length, n) : null);
+  const met = avgs.filter(p => p !== null && p >= 99.5).length,
+        near = avgs.filter(p => p !== null && p < 99.5 && p >= ROUGHLY).length;
+  document.getElementById("wk-note").textContent = !logged.length
+    ? "Nothing logged yet. Each date you change your day in Build a day, it is logged here."
+    : `On average over ${logged.length} logged day${logged.length === 1 ? "" : "s"}: ${met} of ${ns.length} targets met`
+      + (near ? `, ${near} roughly (85% or more)` : "")
+      + ". The body stores several nutrients (vitamins A, D, B12), so the week's average matters more than any one day.";
+  const head = d => { const x = new Date(d + "T12:00"); return `${x.toLocaleDateString(undefined, {weekday: "short"})} ${x.getDate()}`; };
+  document.querySelector("#wktable thead").innerHTML = `<tr><th>Nutrient</th><th>Average</th>${
+    days.map(d => `<th>${head(d)}</th>`).join("")}</tr>`;
+  document.querySelector("#wktable tbody").innerHTML = ns.map((n, j) => `<tr><td>${META[n].label}</td>${cell(avgs[j])}${
+    days.map(d => cell(tot[d] ? pct(tot[d][IDX[n]], n) : null)).join("")}</tr>`).join("");
+}
+
 /* ---------------- tabs ---------------- */
 function showTab(which){
-  ["build","solve","browse"].forEach(t => {
+  ["build","solve","browse","week"].forEach(t => {
     document.getElementById("tab-" + t).setAttribute("aria-selected", String(t === which));
     document.getElementById("p-" + t).hidden = t !== which;
   });
   if (which === "solve"){ renderScarcity(); poolNote(); }
   if (which === "browse") renderBrowse();
+  if (which === "week") renderWeek();
 }
-["build","solve","browse"].forEach(t =>
+["build","solve","browse","week"].forEach(t =>
   document.getElementById("tab-" + t).addEventListener("click", () => showTab(t)));
 
 /* ---------------- profile ---------------- */

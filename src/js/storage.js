@@ -1,7 +1,27 @@
 /* ---------------- persistence ---------------- */
+// The week view's log: each date's day as it last stood. A date is logged only once you change the
+// day on that date (planAtStart is the day as opened), so a day left open overnight isn't counted twice.
+let dayLog = {}, planAtStart = null;
+const LOG_DAYS = 28;
+const dateKey = (d = new Date()) =>
+  `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, "0")}-${String(d.getDate()).padStart(2, "0")}`;
+function cleanLog(h){
+  const out = {};
+  if (h && typeof h === "object") Object.keys(h).filter(d => /^\d{4}-\d{2}-\d{2}$/.test(d)).sort().slice(-LOG_DAYS)
+    .forEach(d => { const p = knownOnly(h[d]); if (Object.keys(p).length) out[d] = p; });
+  return out;
+}
+function logToday(){
+  if (planAtStart === null || JSON.stringify(plan) === planAtStart) return;
+  planAtStart = "";   // changed once: every later change is logged too, even one back to the start
+  const d = dateKey();
+  if (Object.keys(plan).length) dayLog[d] = Object.assign({}, plan); else delete dayLog[d];
+  dayLog = cleanLog(dayLog);
+}
 function persistLocal(){
+  logToday();
   try { localStorage.setItem("completeday", JSON.stringify({plan, meals, rowOrder, addMeal, profile, recent,
-    avoid:[...avoid], sugOff:[...sugOff],
+    avoid:[...avoid], sugOff:[...sugOff], log: dayLog,
     saved: savedCache.filter(x => x.id.startsWith("local-"))})); } catch (e) {}
 }
 const esc = s => String(s).replace(/[&<>"']/g, c => "&#" + c.charCodeAt(0) + ";");
@@ -17,6 +37,7 @@ function restoreLocal(){
       if (s.avoid) avoid = new Set(s.avoid);
       if (s.sugOff) sugOff = new Set(s.sugOff); }
     if (s && Array.isArray(s.saved)) savedCache = s.saved;
+    if (s) dayLog = cleanLog(s.log);
   } catch (e) {}
   renderSaved(savedCache);
   document.getElementById("sex").value = profile.sex;
@@ -205,7 +226,7 @@ document.getElementById("btn-share").addEventListener("click", async () => {
   catch (e) { msg.textContent = "Copy this link:"; field.focus(); field.select(); }
 });
 document.getElementById("btn-backup").addEventListener("click", () => {
-  const data = {app: "the-complete-day", v: 1, exported: new Date().toISOString(), plan, meals, order: rowOrder, profile,
+  const data = {app: "the-complete-day", v: 1, exported: new Date().toISOString(), plan, meals, order: rowOrder, profile, log: dayLog,
     saved: savedCache.map(({id, count, ...s}) => s), foods: customFoods().map(foodRecord)};
   const url = URL.createObjectURL(new Blob([JSON.stringify(data, null, 1)], {type: "application/json"}));
   const a = document.createElement("a");
@@ -240,10 +261,13 @@ restoreFile.addEventListener("change", async () => {
     savedCache.push({id: `local-${Date.now()}-${i}`, name, plan: p, meals: cleanMeals(s.meals), order: cleanOrder(s.order),
       count: Object.keys(p).length});
   });
+  // logged dates come back only where this browser has none
+  const back = cleanLog(d.log), nLog = Object.keys(back).filter(k => !(k in dayLog)).length;
+  dayLog = cleanLog(Object.assign(back, dayLog));
   renderSaved(savedCache); persistLocal();
   const gone = left.size ? ` Left out because they are ultra-processed (NOVA group 4) and no longer in the app: ${
     [...left].join(", ")}.` : "";
-  msg((nDays || nFoods ? `Restored ${nDays} saved day${nDays === 1 ? "" : "s"} and ${nFoods} food${nFoods === 1 ? "" : "s"} of your own.`
+  msg((nDays || nFoods || nLog ? `Restored ${nDays} saved day${nDays === 1 ? "" : "s"}, ${nLog} logged day${nLog === 1 ? "" : "s"} and ${nFoods} food${nFoods === 1 ? "" : "s"} of your own.`
       : left.size ? "Nothing restored." : "Nothing new in that file: everything in it is already here.") + gone);
 });
 

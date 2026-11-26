@@ -144,15 +144,28 @@ function noteHTML(n){
 // Whole-food score: % of a day's calories from NOVA group 1 (unprocessed or minimally processed)
 // and group 2 (cooking ingredients). Group 3 and the two group-4 exceptions are the rest; your own
 // foods have no group and are left out. null when nothing in the day has a group.
-function wholeFoodPct(p){
-  let all = 0, whole = 0;
+// Group 2 also holds oils and sugars, so they are shown separately: a day of fruit and added sugar
+// would otherwise read 100% "whole food". Shares are of the day's calories from grouped foods.
+const isOil = f => f.n[IDX.kcal] > 0 && 9 * f.n[IDX.fat] / f.n[IDX.kcal] > 0.8;
+const isSweetener = f => /\b(sugar|honey|syrup|molasses|agave)\b/i.test(f.name) || tagsOf(f.k).includes("addedsugar");
+function wholeFood(p){
+  let all = 0, whole = 0, oil = 0, sugar = 0;
   for (const k in p){
     const f = BY[k]; if (!f || !f.nova) continue;
     const kc = f.n[IDX.kcal] * p[k] / 100;
     all += kc; if (f.nova <= 2) whole += kc;
+    if (f.nova === 2){ if (isOil(f)) oil += kc; else if (isSweetener(f)) sugar += kc; }
   }
-  return all > 0 ? Math.round(100 * whole / all) : null;
+  const pc = x => Math.round(100 * x / all);
+  return all > 0 ? {pct: pc(whole), oil: pc(oil), sugar: pc(sugar)} : null;
 }
+const wholeFoodPct = p => { const w = wholeFood(p); return w && w.pct; };
+// "incl. 6% oil · 2% sugar" under the score; empty when neither is in the day
+const wholeFoodSub = w => !w ? "" : [w.oil ? w.oil + "% oil" : "", w.sugar ? w.sugar + "% sugar" : ""]
+  .filter(Boolean).join(" · ").replace(/^./, s => "incl. " + s);
+// A counted nutrient at 85-99% of its target is roughly met: daily intake is noisy and food data
+// varies more than that, so it isn't shown as a shortfall.
+const ROUGHLY = 85;
 function renderCoverage(){
   const tot = totals(plan), tg = targets(), ul = limits(), load = ulLoad(plan);
   let met = 0;
@@ -165,13 +178,14 @@ function renderCoverage(){
     const soft = D.softUl[n] && tot[IDX[n]] > D.softUl[n];
     const counted = COUNTED.includes(n) || n === "kcal";
     const ok = p !== null && p >= 99.5;
+    const near = !ok && p !== null && p >= ROUGHLY;
     if (counted && ok) met++;
-    return {n, p, over, soft, ok, counted, amt: tot[IDX[n]]};
+    return {n, p, over, soft, ok, near, counted, amt: tot[IDX[n]]};
   });
   const netcarb = Object.keys(plan).reduce((a, k) => a + netCarbOf(BY[k], plan[k]), 0);
   rows.splice(ORDER.indexOf("carb") + 1, 0,
     {n: "netcarb", p: null, over: false, soft: false, ok: true, counted: false, amt: netcarb});
-  const gaps = rows.filter(r => r.counted && !r.ok);
+  const gaps = rows.filter(r => r.counted && !r.ok && !r.near), close = rows.filter(r => r.counted && r.near);
   // lowest % first, so gaps lead; informational rows (sodium, fat, carbs, EPA+DHA) keep their order at the end
   const key = r => r.counted && r.p !== null ? r.p : Infinity;
   const sorted = gapsFirst
@@ -181,10 +195,10 @@ function renderCoverage(){
   document.getElementById("coverage").innerHTML = sorted.map(r => {
     const m = META[r.n] || {label:"Net carbs", unit:"g", group:"macro",
       note:"Carbohydrate minus fiber \u2014 what the keto and low-carb patterns cap."};
-    const cls = r.over ? "over" : (r.counted && !r.ok ? "gap" : "");
+    const cls = r.over ? "over" : r.counted && r.near ? "near" : r.counted && !r.ok ? "gap" : "";
     const w = r.p === null ? 0 : Math.max(0, Math.min(100, r.p));
     const label = r.n === "EPADHA" ? m.label + " · no DRI" : r.n === "Mo" ? m.label + " · info only" : m.label;
-    const shown = r.p === null ? "—" : (r.p >= 999 ? "999+" : Math.round(r.p) + "%");
+    const shown = r.p === null ? "—" : (r.p >= 999 ? "999+" : (r.counted && r.near ? "≈" : "") + Math.round(r.p) + "%");
     return `<div class="nrow ${cls}">
       <span class="nlabel"><span>${label}</span><button class="info" data-note="${r.n}" title="About ${m.label}"
         aria-label="About ${m.label}" aria-expanded="${openNotes.has(r.n)}">i</button></span>
@@ -201,9 +215,11 @@ function renderCoverage(){
   el("s-met").className = "v " + (met === TARGETS ? "good" : met ? "bad" : "");
   el("s-kcal").textContent = Math.round(tot[IDX.kcal]);
   el("s-mass").textContent = Math.round(mass) + " g";
-  const whole = wholeFoodPct(plan);
-  el("s-whole").textContent = whole === null ? "—" : whole + "%";
+  const whole = wholeFood(plan);
+  el("s-whole").textContent = whole === null ? "—" : whole.pct + "%";
+  el("s-whole-sub").textContent = wholeFoodSub(whole);
   el("covhint").textContent = !Object.keys(plan).length ? "Add food to begin"
-    : gaps.length ? gaps.length + " still short" : "Every target met";
+    : [gaps.length ? gaps.length + " short" : "", close.length ? close.length + " roughly met" : ""].filter(Boolean).join(" · ")
+      || "Every target met";
 }
 

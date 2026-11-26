@@ -169,6 +169,7 @@ body.reordering{user-select:none;-webkit-user-select:none;cursor:grabbing}
   font-variant-numeric:tabular-nums;line-height:1.25}
 .sumcell .v.bad{color:var(--rust)}
 .sumcell .v.good{color:var(--pine)}
+.sumcell .sub{display:block;margin-top:2px;font-family:var(--display);font-size:10.5px;color:var(--faint)}
 .covtools{display:flex;justify-content:space-between;align-items:center;gap:10px;
   padding:9px 14px;border-bottom:1px solid var(--rule);background:var(--sunk)}
 .mini{font-family:var(--display);font-size:11px;font-weight:600;letter-spacing:.07em;
@@ -193,6 +194,9 @@ body.reordering{user-select:none;-webkit-user-select:none;cursor:grabbing}
   font-variant-numeric:tabular-nums}
 .nrow.gap .npct{color:var(--rust);font-weight:600}
 .nrow.over .npct{color:var(--ochre);font-weight:600}
+/* roughly met (85-99%): not a shortfall, just short of the line */
+.nrow.near .nbar i{opacity:.55}
+.nrow.near .npct{color:var(--pine)}
 .namt{display:block;margin-top:3px;font-family:var(--mono);font-size:11px;
   color:var(--faint);font-variant-numeric:tabular-nums;text-align:right}
 .info{border:none;background:none;color:var(--faint);font-size:11px;padding:0 2px;
@@ -319,6 +323,10 @@ td{padding:8px 12px;border-bottom:1px solid var(--rule);text-align:right;
 td:first-child{font-family:var(--display);font-size:13.5px;color:var(--ink);font-weight:500}
 td.cat{font-family:var(--display);font-size:11.5px;color:var(--muted);text-align:left}
 tbody tr:hover{background:var(--sunk)}
+#wktable td.gap{color:var(--rust);background:var(--rust-soft)}
+#wktable td.near{color:var(--pine)}
+#wktable td.none{color:var(--faint)}
+#wktable th:nth-child(2),#wktable td:nth-child(2){font-weight:700;border-right:1px solid var(--rule-hard)}
 .addcell button{font-family:var(--display);font-size:11px;font-weight:600;padding:3px 9px;
   border:1px solid var(--rule);border-radius:100px;background:none;color:var(--pine)}
 .addcell button:hover{background:var(--pine-soft)}
@@ -373,6 +381,7 @@ footer b{color:var(--muted);font-weight:600}
     <button class="tab" role="tab" id="tab-build" aria-controls="p-build" aria-selected="true">Build a day</button>
     <button class="tab" role="tab" id="tab-solve" aria-controls="p-solve" aria-selected="false">Auto-solve</button>
     <button class="tab" role="tab" id="tab-browse" aria-controls="p-browse" aria-selected="false">Food ranking</button>
+    <button class="tab" role="tab" id="tab-week" aria-controls="p-week" aria-selected="false">Week</button>
   </div>
 </header>
 
@@ -489,7 +498,8 @@ footer b{color:var(--muted);font-weight:600}
         <div class="sumcell"><span class="k">Targets met</span><span class="v" id="s-met">0/27</span></div>
         <div class="sumcell"><span class="k">Calories</span><span class="v" id="s-kcal">0</span></div>
         <div class="sumcell" title="Share of calories from NOVA group 1 (unprocessed or minimally processed) and group 2 (cooking ingredients). The rest is group 3 processed food and the two fortified-milk exceptions; your own foods are left out.">
-          <span class="k">Whole food</span><span class="v" id="s-whole">&mdash;</span></div>
+          <span class="k">Whole food</span><span class="v" id="s-whole">&mdash;</span>
+          <span class="sub" id="s-whole-sub"></span></div>
         <div class="sumcell"><span class="k">Food weight</span><span class="v" id="s-mass">0 g</span></div>
       </div>
       <div class="covtools">
@@ -540,6 +550,9 @@ footer b{color:var(--muted);font-weight:600}
         <span class="ctl-label" id="avoidlab">Also avoid</span>
         <div class="chips" role="group" aria-labelledby="avoidlab" id="avoidchips"></div>
         <p class="avoidnote" id="poolnote"></p>
+        <p class="avoidnote"><b>A convenience, not a guarantee.</b> Exclusions go by the tags each food
+          was given from its USDA description, and products differ (a bread may contain milk, a sauce
+          may contain fish). If you have an allergy, check the label of what you actually buy.</p>
       </div>
       <div class="solvenote">The solver picks foods greedily by how much of the remaining gap a
         serving of each closes, weighting nutrients by how few foods supply them at all &mdash; so
@@ -580,6 +593,17 @@ footer b{color:var(--muted);font-weight:600}
   </div>
 </div>
 
+<!-- ============================ WEEK ============================ -->
+<div class="panel" id="p-week" role="tabpanel" aria-labelledby="tab-week" hidden>
+  <div class="card" style="margin-top:24px">
+    <h3>Your last seven days</h3>
+    <p class="rowhint" id="wk-note" style="margin:0;padding:14px 18px 12px"></p>
+    <div class="tblwrap"><table id="wktable"><thead></thead><tbody></tbody></table></div>
+    <p class="avoidnote" style="padding:10px 18px 14px">Each date shows the day as you last left it in
+    Build a day on that date, against your current targets. Kept in this browser only (backups include it).</p>
+  </div>
+</div>
+
 <footer>
   <div><h4>Targets</h4>
     <p>The US Dietary Reference Intakes for your sex and age: the RDA where one exists, otherwise
@@ -614,7 +638,8 @@ footer b{color:var(--muted);font-weight:600}
   <div><h4>Diet patterns</h4>
     <p>Food-selection rules, not certifications; &ldquo;raw&rdquo; means edible as listed without
     cooking. Some patterns can&rsquo;t meet every target (carnivore has no fiber or vitamin C;
-    vegans need a fortified food for B12), and the app says so.</p></div>
+    vegans need a fortified food for B12), and the app says so. Allergen exclusions are a convenience,
+    not a guarantee: always check the label of the product you buy.</p></div>
   <div><h4>Not medical advice</h4>
     <p>This is arithmetic, not a diet prescription. Talk to a clinician or dietitian before big
     changes, especially if you&rsquo;re pregnant, managing a condition, or on medication (vitamin K
@@ -663,7 +688,7 @@ const DIETS = {
   keto:         {label:"Keto",          cls:ALLCLS, netCarbMax:30},
   lowcarb:      {label:"Low-carb",      cls:ALLCLS, netCarbMax:100},
   highprotein:  {label:"High-protein",  cls:ALLCLS, proteinPct:25},
-  carnivore:    {label:"Carnivore",     cls:["dairy","egg","fish","meat"]},
+  carnivore:    {label:"Carnivore",     cls:["dairy","egg","fish","meat"], no:["grain","addedsugar"]},
   raw:          {label:"Raw",           cls:ALLCLS, rawOnly:true},
 };
 const AVOIDABLE = [["dairy","Dairy"],["egg","Eggs"],["gluten","Gluten"],["peanut","Peanuts"],
@@ -961,15 +986,28 @@ function noteHTML(n){
 // Whole-food score: % of a day's calories from NOVA group 1 (unprocessed or minimally processed)
 // and group 2 (cooking ingredients). Group 3 and the two group-4 exceptions are the rest; your own
 // foods have no group and are left out. null when nothing in the day has a group.
-function wholeFoodPct(p){
-  let all = 0, whole = 0;
+// Group 2 also holds oils and sugars, so they are shown separately: a day of fruit and added sugar
+// would otherwise read 100% "whole food". Shares are of the day's calories from grouped foods.
+const isOil = f => f.n[IDX.kcal] > 0 && 9 * f.n[IDX.fat] / f.n[IDX.kcal] > 0.8;
+const isSweetener = f => /\b(sugar|honey|syrup|molasses|agave)\b/i.test(f.name) || tagsOf(f.k).includes("addedsugar");
+function wholeFood(p){
+  let all = 0, whole = 0, oil = 0, sugar = 0;
   for (const k in p){
     const f = BY[k]; if (!f || !f.nova) continue;
     const kc = f.n[IDX.kcal] * p[k] / 100;
     all += kc; if (f.nova <= 2) whole += kc;
+    if (f.nova === 2){ if (isOil(f)) oil += kc; else if (isSweetener(f)) sugar += kc; }
   }
-  return all > 0 ? Math.round(100 * whole / all) : null;
+  const pc = x => Math.round(100 * x / all);
+  return all > 0 ? {pct: pc(whole), oil: pc(oil), sugar: pc(sugar)} : null;
 }
+const wholeFoodPct = p => { const w = wholeFood(p); return w && w.pct; };
+// "incl. 6% oil · 2% sugar" under the score; empty when neither is in the day
+const wholeFoodSub = w => !w ? "" : [w.oil ? w.oil + "% oil" : "", w.sugar ? w.sugar + "% sugar" : ""]
+  .filter(Boolean).join(" · ").replace(/^./, s => "incl. " + s);
+// A counted nutrient at 85-99% of its target is roughly met: daily intake is noisy and food data
+// varies more than that, so it isn't shown as a shortfall.
+const ROUGHLY = 85;
 function renderCoverage(){
   const tot = totals(plan), tg = targets(), ul = limits(), load = ulLoad(plan);
   let met = 0;
@@ -982,13 +1020,14 @@ function renderCoverage(){
     const soft = D.softUl[n] && tot[IDX[n]] > D.softUl[n];
     const counted = COUNTED.includes(n) || n === "kcal";
     const ok = p !== null && p >= 99.5;
+    const near = !ok && p !== null && p >= ROUGHLY;
     if (counted && ok) met++;
-    return {n, p, over, soft, ok, counted, amt: tot[IDX[n]]};
+    return {n, p, over, soft, ok, near, counted, amt: tot[IDX[n]]};
   });
   const netcarb = Object.keys(plan).reduce((a, k) => a + netCarbOf(BY[k], plan[k]), 0);
   rows.splice(ORDER.indexOf("carb") + 1, 0,
     {n: "netcarb", p: null, over: false, soft: false, ok: true, counted: false, amt: netcarb});
-  const gaps = rows.filter(r => r.counted && !r.ok);
+  const gaps = rows.filter(r => r.counted && !r.ok && !r.near), close = rows.filter(r => r.counted && r.near);
   // lowest % first, so gaps lead; informational rows (sodium, fat, carbs, EPA+DHA) keep their order at the end
   const key = r => r.counted && r.p !== null ? r.p : Infinity;
   const sorted = gapsFirst
@@ -998,10 +1037,10 @@ function renderCoverage(){
   document.getElementById("coverage").innerHTML = sorted.map(r => {
     const m = META[r.n] || {label:"Net carbs", unit:"g", group:"macro",
       note:"Carbohydrate minus fiber \u2014 what the keto and low-carb patterns cap."};
-    const cls = r.over ? "over" : (r.counted && !r.ok ? "gap" : "");
+    const cls = r.over ? "over" : r.counted && r.near ? "near" : r.counted && !r.ok ? "gap" : "";
     const w = r.p === null ? 0 : Math.max(0, Math.min(100, r.p));
     const label = r.n === "EPADHA" ? m.label + " · no DRI" : r.n === "Mo" ? m.label + " · info only" : m.label;
-    const shown = r.p === null ? "—" : (r.p >= 999 ? "999+" : Math.round(r.p) + "%");
+    const shown = r.p === null ? "—" : (r.p >= 999 ? "999+" : (r.counted && r.near ? "≈" : "") + Math.round(r.p) + "%");
     return `<div class="nrow ${cls}">
       <span class="nlabel"><span>${label}</span><button class="info" data-note="${r.n}" title="About ${m.label}"
         aria-label="About ${m.label}" aria-expanded="${openNotes.has(r.n)}">i</button></span>
@@ -1018,10 +1057,12 @@ function renderCoverage(){
   el("s-met").className = "v " + (met === TARGETS ? "good" : met ? "bad" : "");
   el("s-kcal").textContent = Math.round(tot[IDX.kcal]);
   el("s-mass").textContent = Math.round(mass) + " g";
-  const whole = wholeFoodPct(plan);
-  el("s-whole").textContent = whole === null ? "—" : whole + "%";
+  const whole = wholeFood(plan);
+  el("s-whole").textContent = whole === null ? "—" : whole.pct + "%";
+  el("s-whole-sub").textContent = wholeFoodSub(whole);
   el("covhint").textContent = !Object.keys(plan).length ? "Add food to begin"
-    : gaps.length ? gaps.length + " still short" : "Every target met";
+    : [gaps.length ? gaps.length + " short" : "", close.length ? close.length + " roughly met" : ""].filter(Boolean).join(" · ")
+      || "Every target met";
 }
 
 /* ---------------- plan list ---------------- */
@@ -1052,6 +1093,9 @@ function guessMeal(k){
 // split: meal index -> grams. plan[k] stays the day's total for that food, which is all the
 // coverage panel, suggestions and solver need. Older data stored one meal index per food.
 const MEAL_IDS = ["0", "1", "2", "3"];
+// rough calorie shares of breakfast, lunch, dinner and snacks, used to place a solved day's foods
+const MEAL_SHARE = [0.25, 0.30, 0.35, 0.10];
+const SPLIT_AT = 2.2;   // servings: a guessed portion bigger than this is split over two meals
 // splits for every food in p: keep m's split (an old single index counts as the whole amount),
 // scaled to p's total if they disagree; guess a meal for the rest
 function fillMeals(p, m){
@@ -1065,13 +1109,34 @@ function fillMeals(p, m){
     const parts = MEAL_IDS.filter(i => +v[i] > 0), sum = parts.reduce((a, i) => a + +v[i], 0);
     parts.forEach(i => put(k, +i, +v[i] * p[k] / sum));
   }
-  // mains first, so the calorie balance afterwards works around them
-  const rest = Object.keys(p).filter(k => !(k in out)).sort((a, b) => isMain(b) - isMain(a));
+  // Foods with no meal yet (a solved day, older data) are placed so the day reads like meals:
+  // mains first, then the biggest foods, each into the meal furthest below its calorie share,
+  // and a portion over SPLIT_AT servings goes in two pieces (three cups of milk: breakfast and a
+  // snack, not all at breakfast).
+  const goal = MEAL_SHARE.map(s => s * Object.keys(p).reduce((a, k) => a + kcalOf(k, p[k]), 0));
+  const room = i => goal[i] - kc[i];
+  const rest = Object.keys(p).filter(k => !(k in out))
+    .sort((a, b) => isMain(b) - isMain(a) || kcalOf(b, p[b]) - kcalOf(a, p[a]));
   for (const k of rest){
-    let i = guessMeal(k);
-    if (i === null) i = isMain(k) && mains[1] !== mains[2] ? (mains[1] < mains[2] ? 1 : 2)
-                      : kc[1] <= kc[2] ? 1 : 2;
-    put(k, i, p[k]);
+    if (isMain(k)){   // one main each for lunch and dinner, then by calories
+      put(k, mains[1] !== mains[2] ? (mains[1] < mains[2] ? 1 : 2) : room(1) >= room(2) ? 1 : 2, p[k]);
+      continue;
+    }
+    const g0 = guessMeal(k);
+    // where this kind of food goes: breakfast foods to breakfast (then a snack), fruit and nuts to
+    // snacks (then breakfast), everything else to lunch or dinner
+    const opts = g0 === 0 ? [0, 3] : g0 === 3 ? [3, 0] : [1, 2];
+    const pieces = p[k] > SPLIT_AT * BY[k].serv
+      ? [Math.round(p[k] / 2 / 5) * 5, 0].map((g, j, a) => j ? p[k] - a[0] : g) : [p[k]];
+    let used = null;
+    for (const g of pieces){
+      // first choice of its kind unless that meal is already well past its share; a second piece
+      // goes to the other meal of its kind
+      const i = used !== null ? opts.find(x => x !== used)
+              : g0 !== null ? (room(opts[0]) > -0.3 * goal[opts[0]] ? opts[0] : opts[1])
+              : room(1) >= room(2) ? 1 : 2;
+      put(k, i, g); used = i;
+    }
   }
   // keep the plan's own order for display: rebuild out in p's key order
   const ordered = {}; for (const k in p) ordered[k] = out[k];
@@ -1724,20 +1789,21 @@ function planCard(p, i, opts){
   return `<div class="card" style="margin-bottom:14px">
     <h3>${ok ? "Complete day" : "Best found"} &mdash; ${keys.length} foods</h3>
     <div id="sv-${i}">${MEALS.map((_, mi) => {
-      const mk = keys.filter(k => m[k][mi] > 0);   // a solved day puts each food in one meal
-      return mk.length ? mealHeader(mi, mk.reduce((a, k) => a + kcalOf(k, p[k]), 0), false)
+      const mk = keys.filter(k => m[k][mi] > 0);   // a big portion can be split over two meals
+      return mk.length ? mealHeader(mi, mk.reduce((a, k) => a + kcalOf(k, m[k][mi]), 0), false)
         + mk.map(k => `<div class="prow"><span>
       <span class="pname">${BY[k].name}</span>${novaTag(BY[k])}
-      <span class="pmeta">${p[k]} g &middot; ${(p[k]/BY[k].serv).toFixed(1)} × ${BY[k].sl}</span>
+      <span class="pmeta">${Math.round(m[k][mi])} g &middot; ${(m[k][mi]/BY[k].serv).toFixed(1)} × ${BY[k].sl}</span>
       </span><span class="mono" style="font-size:12.5px;color:var(--muted)">${
-        Math.round(BY[k].n[IDX.kcal]*p[k]/100)} kcal</span></div>`).join("") : "";
+        Math.round(kcalOf(k, m[k][mi]))} kcal</span></div>`).join("") : "";
     }).join("")}</div>
     <div class="sum four" style="border-bottom:none;border-top:1px solid var(--rule)">
       <div class="sumcell"><span class="k">Targets met</span>
         <span class="v ${ok?"good":"bad"}">${TARGETS - e.short.length}/${TARGETS}</span></div>
       <div class="sumcell"><span class="k">Calories</span><span class="v">${e.kcal}</span></div>
       <div class="sumcell" title="Share of calories from NOVA group 1 (unprocessed or minimally processed) and group 2 (cooking ingredients)">
-        <span class="k">Whole food</span><span class="v">${wholeFoodPct(p) === null ? "—" : wholeFoodPct(p) + "%"}</span></div>
+        <span class="k">Whole food</span><span class="v">${wholeFoodPct(p) === null ? "—" : wholeFoodPct(p) + "%"}</span>
+        <span class="sub">${wholeFoodSub(wholeFood(p))}</span></div>
       <div class="sumcell"><span class="k">Weight</span><span class="v">${e.mass} g</span></div>
     </div>
     <div class="solvenote" style="padding-top:12px">Net carbs
@@ -1907,16 +1973,44 @@ document.querySelector("#brtable").addEventListener("click", e => {
   b.textContent = "Added"; setTimeout(() => { b.textContent = "Add"; }, 1100);
 });
 
+/* ---------------- week ---------------- */
+// The last seven dates, each the day as you last left it on that date, against today's targets.
+function renderWeek(){
+  const t = targets(), days = [];
+  // newest first, after the average, so a phone shows the useful columns without scrolling
+  for (let i = 0; i < 7; i++){ const d = new Date(); d.setDate(d.getDate() - i); days.push(dateKey(d)); }
+  const logged = days.filter(d => dayLog[d]), tot = Object.fromEntries(logged.map(d => [d, totals(dayLog[d])]));
+  const ns = ["kcal"].concat(COUNTED).filter(n => t[n]);
+  const pct = (v, n) => 100 * v / t[n];
+  const cell = p => p === null ? `<td class="none">&mdash;</td>`
+    : p >= 99.5 ? `<td>${Math.round(p)}%</td>`
+    : `<td class="${p >= ROUGHLY ? "near" : "gap"}">${p >= ROUGHLY ? "\u2248" : ""}${Math.round(p)}%</td>`;
+  const avgs = ns.map(n => logged.length ? pct(logged.reduce((a, d) => a + tot[d][IDX[n]], 0) / logged.length, n) : null);
+  const met = avgs.filter(p => p !== null && p >= 99.5).length,
+        near = avgs.filter(p => p !== null && p < 99.5 && p >= ROUGHLY).length;
+  document.getElementById("wk-note").textContent = !logged.length
+    ? "Nothing logged yet. Each date you change your day in Build a day, it is logged here."
+    : `On average over ${logged.length} logged day${logged.length === 1 ? "" : "s"}: ${met} of ${ns.length} targets met`
+      + (near ? `, ${near} roughly (85% or more)` : "")
+      + ". The body stores several nutrients (vitamins A, D, B12), so the week's average matters more than any one day.";
+  const head = d => { const x = new Date(d + "T12:00"); return `${x.toLocaleDateString(undefined, {weekday: "short"})} ${x.getDate()}`; };
+  document.querySelector("#wktable thead").innerHTML = `<tr><th>Nutrient</th><th>Average</th>${
+    days.map(d => `<th>${head(d)}</th>`).join("")}</tr>`;
+  document.querySelector("#wktable tbody").innerHTML = ns.map((n, j) => `<tr><td>${META[n].label}</td>${cell(avgs[j])}${
+    days.map(d => cell(tot[d] ? pct(tot[d][IDX[n]], n) : null)).join("")}</tr>`).join("");
+}
+
 /* ---------------- tabs ---------------- */
 function showTab(which){
-  ["build","solve","browse"].forEach(t => {
+  ["build","solve","browse","week"].forEach(t => {
     document.getElementById("tab-" + t).setAttribute("aria-selected", String(t === which));
     document.getElementById("p-" + t).hidden = t !== which;
   });
   if (which === "solve"){ renderScarcity(); poolNote(); }
   if (which === "browse") renderBrowse();
+  if (which === "week") renderWeek();
 }
-["build","solve","browse"].forEach(t =>
+["build","solve","browse","week"].forEach(t =>
   document.getElementById("tab-" + t).addEventListener("click", () => showTab(t)));
 
 /* ---------------- profile ---------------- */
@@ -1931,9 +2025,29 @@ function showTab(which){
 }));
 
 /* ---------------- persistence ---------------- */
+// The week view's log: each date's day as it last stood. A date is logged only once you change the
+// day on that date (planAtStart is the day as opened), so a day left open overnight isn't counted twice.
+let dayLog = {}, planAtStart = null;
+const LOG_DAYS = 28;
+const dateKey = (d = new Date()) =>
+  `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, "0")}-${String(d.getDate()).padStart(2, "0")}`;
+function cleanLog(h){
+  const out = {};
+  if (h && typeof h === "object") Object.keys(h).filter(d => /^\d{4}-\d{2}-\d{2}$/.test(d)).sort().slice(-LOG_DAYS)
+    .forEach(d => { const p = knownOnly(h[d]); if (Object.keys(p).length) out[d] = p; });
+  return out;
+}
+function logToday(){
+  if (planAtStart === null || JSON.stringify(plan) === planAtStart) return;
+  planAtStart = "";   // changed once: every later change is logged too, even one back to the start
+  const d = dateKey();
+  if (Object.keys(plan).length) dayLog[d] = Object.assign({}, plan); else delete dayLog[d];
+  dayLog = cleanLog(dayLog);
+}
 function persistLocal(){
+  logToday();
   try { localStorage.setItem("completeday", JSON.stringify({plan, meals, rowOrder, addMeal, profile, recent,
-    avoid:[...avoid], sugOff:[...sugOff],
+    avoid:[...avoid], sugOff:[...sugOff], log: dayLog,
     saved: savedCache.filter(x => x.id.startsWith("local-"))})); } catch (e) {}
 }
 const esc = s => String(s).replace(/[&<>"']/g, c => "&#" + c.charCodeAt(0) + ";");
@@ -1949,6 +2063,7 @@ function restoreLocal(){
       if (s.avoid) avoid = new Set(s.avoid);
       if (s.sugOff) sugOff = new Set(s.sugOff); }
     if (s && Array.isArray(s.saved)) savedCache = s.saved;
+    if (s) dayLog = cleanLog(s.log);
   } catch (e) {}
   renderSaved(savedCache);
   document.getElementById("sex").value = profile.sex;
@@ -2137,7 +2252,7 @@ document.getElementById("btn-share").addEventListener("click", async () => {
   catch (e) { msg.textContent = "Copy this link:"; field.focus(); field.select(); }
 });
 document.getElementById("btn-backup").addEventListener("click", () => {
-  const data = {app: "the-complete-day", v: 1, exported: new Date().toISOString(), plan, meals, order: rowOrder, profile,
+  const data = {app: "the-complete-day", v: 1, exported: new Date().toISOString(), plan, meals, order: rowOrder, profile, log: dayLog,
     saved: savedCache.map(({id, count, ...s}) => s), foods: customFoods().map(foodRecord)};
   const url = URL.createObjectURL(new Blob([JSON.stringify(data, null, 1)], {type: "application/json"}));
   const a = document.createElement("a");
@@ -2172,10 +2287,13 @@ restoreFile.addEventListener("change", async () => {
     savedCache.push({id: `local-${Date.now()}-${i}`, name, plan: p, meals: cleanMeals(s.meals), order: cleanOrder(s.order),
       count: Object.keys(p).length});
   });
+  // logged dates come back only where this browser has none
+  const back = cleanLog(d.log), nLog = Object.keys(back).filter(k => !(k in dayLog)).length;
+  dayLog = cleanLog(Object.assign(back, dayLog));
   renderSaved(savedCache); persistLocal();
   const gone = left.size ? ` Left out because they are ultra-processed (NOVA group 4) and no longer in the app: ${
     [...left].join(", ")}.` : "";
-  msg((nDays || nFoods ? `Restored ${nDays} saved day${nDays === 1 ? "" : "s"} and ${nFoods} food${nFoods === 1 ? "" : "s"} of your own.`
+  msg((nDays || nFoods || nLog ? `Restored ${nDays} saved day${nDays === 1 ? "" : "s"}, ${nLog} logged day${nLog === 1 ? "" : "s"} and ${nFoods} food${nFoods === 1 ? "" : "s"} of your own.`
       : left.size ? "Nothing restored." : "Nothing new in that file: everything in it is already here.") + gone);
 });
 
@@ -2199,6 +2317,7 @@ if (!Object.keys(plan).length){
   plan = {oats:60, milk:240, egg:100, spinach:150, salmon:113, sweetpot:200, almond:28, lentil:150};
 }
 renderPlan();
+planAtStart = JSON.stringify(plan);   // from here on, a change to the day logs it for the week view
 showTab("build");
 initDb();
 // A shared day never replaces today's without asking.
@@ -2234,6 +2353,7 @@ addEventListener("storage", e => {
     savedCache = savedCache.filter(x => !x.id.startsWith("local-"))
       .concat(s && Array.isArray(s.saved) ? s.saved : []);
     renderSaved(savedCache);
+    if (s) dayLog = cleanLog(s.log);
   } catch (err) {}
 });
 </script>
