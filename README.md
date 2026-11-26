@@ -16,8 +16,8 @@ food can appear in more than one meal: pick the meal next to the search box and 
 panel shows every target as a bar, with gaps and upper-limit breaches highlighted, and a
 **whole-food score**: the share of the day's calories from NOVA group 1 and 2 foods.
 
-**Recent foods.** The foods you added most recently sit in a row under the search box, one tap
-each to add a serving again (they're kept in this browser).
+**Recent foods.** Your six most recently added foods sit in one line under the search box, one
+tap each to add a serving again (they're kept in this browser).
 
 **On a phone.** Drag the handle with a finger to reorder or move foods between meals; the buttons
 and fields are finger-sized on touch screens, and typing a serving doesn't zoom the page.
@@ -25,9 +25,8 @@ and fields are finger-sized on touch screens, and typing a serving doesn't zoom 
 **Search.** Every word you type must match ("chicken thigh roasted"). Results put the food
 itself before dishes made from it ("rice" lists brown and white rice before rice noodles), everyday
 foods before uncommon ones, less processed before more, and cooked forms before raw weights of
-meat and fish, dry grains and beans, and canned versions. Narrow it to one category, or tick
-**Include uncommon foods** to see game, organ meats and specialty items (they show anyway when
-nothing else matches).
+meat and fish, dry grains and beans, and canned versions. Uncommon foods (game, organ meats,
+specialty items) are never hidden; they just come after everyday ones.
 
 **Processing levels.** Every food carries its NOVA group, the standard research classification
 of how processed a food is, as a badge beside its name:

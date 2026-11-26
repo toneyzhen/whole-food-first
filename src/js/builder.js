@@ -143,10 +143,10 @@ function renderPlan(){
 
 /* ---------------- search ---------------- */
 const search = document.getElementById("search"), results = document.getElementById("results");
-const searchCat = document.getElementById("searchcat"), searchUnc = document.getElementById("searchunc");
 let cursor = -1, hits = [];
 // Lower is better. With 1,600+ foods a word like "chicken" matches dozens of forms, so: names that
-// start with the query, your own foods, everyday foods, less processed (NOVA 1 before 3), cooked
+// start with the query, your own foods, everyday foods (uncommon ones sink, never hidden), less
+// processed (NOVA 1 before 3), cooked
 // before raw meat or fish weights and dry grains or beans, then shorter (more generic) names.
 function searchRank(f, words){
   const n = f.name.toLowerCase(), w0 = words[0];
@@ -168,21 +168,16 @@ function searchRank(f, words){
 function runSearch(){
   const q = search.value.trim().toLowerCase();
   if (!q){ results.hidden = true; search.setAttribute("aria-expanded","false"); return; }
-  const words = q.split(/\s+/), cat = searchCat.value;
-  const all = FOODS.filter(f => (!cat || f.cat === cat) && words.every(w => f.name.toLowerCase().includes(w)
+  const words = q.split(/\s+/);
+  const all = FOODS.filter(f => words.every(w => f.name.toLowerCase().includes(w)
     || f.cat.toLowerCase().includes(w) || (w.length >= 4 && (f.tags || "").includes(w))));
-  // uncommon foods (game, organ meats, specialty items) only on request, or when nothing else matches
-  const everyday = all.filter(f => f.common !== 0);
-  const pool = searchUnc.checked || !everyday.length ? all : everyday, hidden = all.length - pool.length;
-  hits = pool.map(f => [searchRank(f, words), f]).sort((a, b) => a[0] - b[0]).map(x => x[1]).slice(0, 40);
+  hits = all.map(f => [searchRank(f, words), f]).sort((a, b) => a[0] - b[0]).map(x => x[1]).slice(0, 40);
   cursor = hits.length ? 0 : -1;
   results.innerHTML = hits.length
     ? hits.map((f,i) => `<button class="res${i === 0 ? " cursor" : ""}" data-add="${f.k}"
         role="option" aria-selected="${i === 0}" id="res-${i}"><span>${f.name}${novaTag(f)}</span>
         <small>${f.cat} &middot; ${f.sl}</small></button>`).join("")
-      + (hidden ? `<p class="reshint">${hidden} uncommon match${hidden === 1 ? "" : "es"} hidden &mdash; tick
-          &ldquo;Include uncommon foods&rdquo; to see ${hidden === 1 ? "it" : "them"}.</p>` : "")
-    : `<p class="empty">No food matches &ldquo;${esc(q)}&rdquo;${cat ? ` in ${esc(cat)}` : ""}.</p>`;
+    : `<p class="empty">No food matches &ldquo;${esc(q)}&rdquo;.</p>`;
   results.hidden = false;
   search.setAttribute("aria-expanded","true");
   syncCursor();
@@ -206,7 +201,7 @@ function addFood(k, grams){
 }
 // Recent foods: one tap to add again, since most days reuse the same foods. Stored with the day
 // (persistLocal); entries from outside go through cleanRecent like any other food key.
-const RECENT_MAX = 10;
+const RECENT_MAX = 6;
 let recent = [];
 const cleanRecent = r => Array.isArray(r)
   ? [...new Set(r.filter(k => typeof k === "string").map(renamed))]
@@ -214,15 +209,17 @@ const cleanRecent = r => Array.isArray(r)
 function renderRecent(){
   const box = document.getElementById("recent"), ks = cleanRecent(recent);
   box.hidden = !ks.length;
+  // short names ("Black beans" for "Black beans, cooked"), unless two recent foods would then look alike
+  const short = k => BY[k].name.split(",")[0];
+  const label = k => ks.filter(x => short(x) === short(k)).length > 1 ? BY[k].name : short(k);
   box.innerHTML = `<span class="k">Recent</span>` + ks.map(k =>
-    `<button class="chip" data-recent="${k}" title="${BY[k].name}"
-       aria-label="Add one serving of ${BY[k].name} to ${MEALS[addMeal].toLowerCase()}">${BY[k].name}</button>`).join("");
+    `<button data-recent="${k}" title="${BY[k].name}"
+       aria-label="Add one serving of ${BY[k].name} to ${MEALS[addMeal].toLowerCase()}">${label(k)}</button>`).join("");
 }
 document.getElementById("recent").addEventListener("click", e => {
   const b = e.target.closest("[data-recent]"); if (b) addFood(b.dataset.recent);
 });
 search.addEventListener("input", runSearch);
-for (const c of [searchCat, searchUnc]) c.addEventListener("change", () => { if (search.value.trim()) runSearch(); });
 search.addEventListener("keydown", e => {
   if (results.hidden || !hits.length) return;
   if (e.key === "ArrowDown" || e.key === "ArrowUp"){

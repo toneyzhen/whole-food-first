@@ -118,11 +118,13 @@ const DIETS = ["anything","pescatarian","vegetarian","vegan","paleo","whole30","
     ok(BY.oats.nova === 1 && BY.cheddar.nova === 3 && wf === Math.round(100 * kO / (kO + kC)), "whole-food score");
     ok(wholeFoodPct({}) === null, "whole-food score of an empty day");
     // search: every word must match, and the plain cooked everyday food ranks first
-    search.value = "chicken breast"; searchCat.value = ""; searchUnc.checked = false; runSearch();
+    search.value = "chicken breast"; runSearch();
     ok(hits.length && hits.every(f => /chicken/i.test(f.name) && /breast/i.test(f.name)) &&
        !/\braw\b/i.test(hits[0].name) && hits[0].common !== 0, "search ranking");
-    search.value = "spleen"; runSearch();   // only uncommon foods match: shown anyway
+    search.value = "spleen"; runSearch();   // uncommon foods are never hidden, only ranked lower
     ok(hits.length > 0 && hits.every(f => f.common === 0), "uncommon-only search");
+    search.value = "liver"; runSearch();
+    ok(hits.length > 0, "uncommon foods findable");
     search.value = ""; runSearch();
     // recent foods: every add moves the food to the front; stored keys are cleaned like any input
     plan = {}; meals = {}; rowOrder = []; recent = [];

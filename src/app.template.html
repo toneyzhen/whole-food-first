@@ -94,21 +94,17 @@ header.top{padding-block:22px 0}
 .res:hover,.res.cursor{background:var(--pine-soft)}
 .res small{font-family:var(--display);font-size:11.5px;color:var(--muted);white-space:nowrap}
 .empty{padding:26px 18px;text-align:center;color:var(--muted);font-size:15px}
-.reshint{padding:9px 13px;font-family:var(--display);font-size:12px;color:var(--muted)}
-.searchopts{display:flex;flex-wrap:wrap;gap:8px 16px;align-items:center;margin-top:8px;
-  font-family:var(--display);font-size:12.5px;color:var(--muted)}
-.searchopts select{background:var(--surface);border:1px solid var(--rule);border-radius:3px;
-  height:32px;padding:0 8px;font-family:var(--display);font-size:12.5px;color:var(--ink)}
-.searchopts label{display:inline-flex;gap:6px;align-items:center;cursor:pointer}
-/* recent foods: one tap to add again; one sideways-scrolling line on phones */
-.recent{display:flex;flex-wrap:wrap;gap:6px;align-items:center;margin-top:10px}
+/* recent foods: one quiet line of shortcuts (scrolls sideways if it overflows) */
+.recent{display:flex;flex-wrap:nowrap;gap:6px;align-items:center;margin-top:10px;overflow-x:auto;
+  scrollbar-width:none}
+.recent::-webkit-scrollbar{display:none}
 .recent[hidden]{display:none}
 .recent .k{font-family:var(--display);font-size:10px;font-weight:600;letter-spacing:.13em;
-  text-transform:uppercase;color:var(--faint);margin-right:2px}
-.recent .chip{max-width:200px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;padding:6px 11px;
-  flex:none}
-@media (max-width:520px){.recent{flex-wrap:nowrap;overflow-x:auto;scrollbar-width:none;padding-bottom:2px}
-  .recent::-webkit-scrollbar{display:none}}
+  text-transform:uppercase;color:var(--faint);margin-right:2px;flex:none}
+.recent button{flex:none;max-width:180px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;
+  border:none;border-radius:999px;background:var(--sunk);color:var(--body);padding:4px 10px;
+  font-family:var(--display);font-size:12px;font-weight:500;cursor:pointer}
+.recent button:hover{background:var(--pine-soft);color:var(--pine)}
 
 /* ---------- plan rows ---------- */
 .prow{display:grid;grid-template-columns:auto minmax(0,1fr) auto;gap:10px 10px;align-items:center;
@@ -152,6 +148,7 @@ body.reordering{user-select:none;-webkit-user-select:none;cursor:grabbing}
   .amt input{height:40px;font-size:16px}
   .del{min-width:40px;min-height:40px;font-size:20px}
   .info{min-width:28px;min-height:28px;font-size:12px}
+  .recent button{padding:8px 12px;font-size:13px}
   /* !important: field styles elsewhere set 13-15 px with more specific selectors */
   input,select,textarea{font-size:16px!important}
 }
@@ -396,15 +393,9 @@ footer b{color:var(--muted);font-weight:600}
           </div>
           <select id="addmeal" aria-label="Meal that new foods are added to"></select>
         </div>
-        <div class="searchopts">
-          <select id="searchcat" aria-label="Search only this category"></select>
-          <label><input type="checkbox" id="searchunc"> Include uncommon foods</label>
-        </div>
         <div class="recent" id="recent" hidden></div>
       </div>
-      <p class="rowhint">Amounts are in <b>servings</b> &mdash; type decimals like
-        <b>0.5</b> or <b>1.25</b>; the &minus; and + buttons step by one whole serving. Drag the <b>&#8942;&#8942;</b> handle to reorder
-        or move a food to another meal (or focus it and use the arrow keys).</p>
+      <p class="rowhint">Amounts are servings (0.5, 1.25&hellip; work). Drag <b>&#8942;&#8942;</b> to reorder or move between meals.</p>
       <p class="rowhint" id="removedmsg" role="status" style="color:var(--rust)" hidden></p>
       <div id="planlist"></div>
       <div class="btnrow">
