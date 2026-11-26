@@ -1,5 +1,5 @@
 /* ---------------- browse ---------------- */
-const brNut = document.getElementById("br-nut"), brCat = document.getElementById("br-cat");
+const brNut = document.getElementById("br-nut");
 const RANKABLE = ORDER.filter(n => n !== "kcal");
 brNut.innerHTML = `<option value="density">Overall nutrient density</option>` +
   RANKABLE.map(n => `<option value="${n}">${META[n].label}</option>`).join("");
@@ -16,19 +16,29 @@ function densityOf(f, grams, t){
 const MIN_KCAL_PER_100G = 10;
 document.getElementById("br-diet").innerHTML =
   Object.keys(DIETS).map(k => `<option value="${k}">${DIETS[k].label}</option>`).join("");
-// the ranking table's category list (your own foods add "My foods")
+// The ranking's categories: toggle any number; none picked means all. Your own foods add "My foods".
+const brCats = new Set();
 function fillCats(){
-  const was = brCat.value;
-  brCat.innerHTML = `<option value="">All categories</option>` +
-    [...new Set(FOODS.map(f => f.cat))].sort().map(c => `<option>${c}</option>`).join("");
-  brCat.value = [...brCat.options].some(o => o.value === was) ? was : "";
+  const cats = [...new Set(FOODS.map(f => f.cat))].sort();
+  for (const c of [...brCats]) if (!cats.includes(c)) brCats.delete(c);
+  const attr = c => c.replace(/&/g, "&amp;");          // "Grains & starches"
+  document.getElementById("br-cats").innerHTML =
+    `<button class="chip" data-brcat="" aria-pressed="${!brCats.size}">All</button>` +
+    cats.map(c => `<button class="chip" data-brcat="${attr(c)}" aria-pressed="${brCats.has(c)}">${attr(c)}</button>`).join("");
 }
 fillCats();
+document.getElementById("br-cats").addEventListener("click", e => {
+  const b = e.target.closest("[data-brcat]"); if (!b) return;
+  const c = b.dataset.brcat;
+  if (!c) brCats.clear(); else if (brCats.has(c)) brCats.delete(c); else brCats.add(c);
+  fillCats(); renderBrowse();
+  const again = document.querySelector(`#br-cats [data-brcat="${CSS.escape(c)}"]`); if (again) again.focus();
+});
 function renderBrowse(){
   const n = brNut.value, basis = document.getElementById("br-basis").value;
-  const cat = brCat.value, diet = document.getElementById("br-diet").value;
+  const diet = document.getElementById("br-diet").value;
   const allowed = new Set(pool(diet, "balanced", avoid)), t = targets(), dens = n === "density";
-  const rows = FOODS.filter(f => allowed.has(f.k) && (!cat || f.cat === cat)
+  const rows = FOODS.filter(f => allowed.has(f.k) && (!brCats.size || brCats.has(f.cat))
       && (basis !== "kcal" || f.n[IDX.kcal] >= MIN_KCAL_PER_100G)).map(f => {
     const kc = f.n[IDX.kcal];
     const grams = basis === "serv" ? f.serv : basis === "100g" ? 100 : 100 * 100 / kc;
@@ -57,7 +67,7 @@ function renderBrowse(){
     <td>${Math.round(r.amtKcal)}</td>
     <td class="addcell"><button data-add="${r.f.k}">Add</button></td></tr>`).join("");
 }
-["br-nut","br-basis","br-cat","br-diet"].forEach(id =>
+["br-nut","br-basis","br-diet"].forEach(id =>
   document.getElementById(id).addEventListener("change", renderBrowse));
 document.querySelector("#brtable").addEventListener("click", e => {
   const b = e.target.closest("[data-add]"); if (!b) return;

@@ -137,9 +137,15 @@ const DIETS = ["anything","pescatarian","vegetarian","vegan","paleo","whole30","
     const tg = targets(), dSp = densityOf(BY.spinach, BY.spinach.serv, tg), dOil = densityOf(BY.oliveoil, BY.oliveoil.serv, tg);
     ok(dSp.score > 0 && dSp.score <= 100 && dOil.score < dSp.score && dSp.top.length > 0, "density score");
     document.getElementById("br-nut").value = "density"; document.getElementById("br-basis").value = "kcal";
-    document.getElementById("br-cat").value = ""; renderBrowse();
+    brCats.clear(); renderBrowse();
     const lead = [...document.querySelectorAll("#brtable tbody tr")].slice(0, 5).map(r => r.querySelector(".cat").textContent);
     ok(lead.length === 5 && lead.filter(c => c === "Vegetables").length >= 3, "density per 100 kcal leaders: " + lead);
+    // categories: any number at once, none meaning all
+    // (Eggs has under 40 foods, so the top-40 table must also show Fruit)
+    brCats.add("Fruit"); brCats.add("Eggs"); renderBrowse();
+    const cats = new Set([...document.querySelectorAll("#brtable tbody .cat")].map(td => td.textContent));
+    ok(cats.size === 2 && cats.has("Fruit") && cats.has("Eggs"), "two categories at once: " + [...cats]);
+    brCats.clear(); renderBrowse();
     // the calorie trim never removes a food the user kept
     profile = {sex: "male", age: 40, kcal: 2500};
     const seed = {oliveoil: 10, butter: 10, walnut: 200, peanut: 200, milk: 244};

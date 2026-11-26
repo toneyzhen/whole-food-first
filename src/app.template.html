@@ -288,6 +288,7 @@ details[open]>.cfsum{border-bottom:1px solid var(--rule)}
   border:1px solid var(--rule);background:var(--surface);color:var(--muted);
   border-radius:100px;transition:background .12s,border-color .12s,color .12s}
 .chip:hover{border-color:var(--pine);color:var(--pine)}
+.brcats{display:flex;flex-direction:column;gap:6px;margin:0 18px 14px}
 .chip[aria-pressed="true"]{background:var(--pine);border-color:var(--pine);
   color:var(--on-pine);font-weight:600}
 .ctl-label{font-family:var(--display);font-size:10px;font-weight:600;letter-spacing:.13em;
@@ -570,9 +571,10 @@ footer b{color:var(--muted);font-weight:600}
       <div class="fld"><label for="br-basis">Per</label><select id="br-basis">
         <option value="serv">Realistic serving</option><option value="100g">100 g</option>
         <option value="kcal">100 calories</option></select></div>
-      <div class="fld"><label for="br-cat">Category</label><select id="br-cat"></select></div>
       <div class="fld"><label for="br-diet">Diet</label><select id="br-diet"></select></div>
     </div>
+    <div class="brcats"><span class="ctl-label">Categories</span>
+      <div class="chips" id="br-cats" role="group" aria-label="Categories to rank; none picked means all"></div></div>
     <p class="rowhint" id="br-note" style="margin-top:0;margin-bottom:12px"></p>
     <div class="tblwrap"><table id="brtable"><thead></thead><tbody></tbody></table></div>
   </div>

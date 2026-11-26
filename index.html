@@ -288,6 +288,7 @@ details[open]>.cfsum{border-bottom:1px solid var(--rule)}
   border:1px solid var(--rule);background:var(--surface);color:var(--muted);
   border-radius:100px;transition:background .12s,border-color .12s,color .12s}
 .chip:hover{border-color:var(--pine);color:var(--pine)}
+.brcats{display:flex;flex-direction:column;gap:6px;margin:0 18px 14px}
 .chip[aria-pressed="true"]{background:var(--pine);border-color:var(--pine);
   color:var(--on-pine);font-weight:600}
 .ctl-label{font-family:var(--display);font-size:10px;font-weight:600;letter-spacing:.13em;
@@ -570,9 +571,10 @@ footer b{color:var(--muted);font-weight:600}
       <div class="fld"><label for="br-basis">Per</label><select id="br-basis">
         <option value="serv">Realistic serving</option><option value="100g">100 g</option>
         <option value="kcal">100 calories</option></select></div>
-      <div class="fld"><label for="br-cat">Category</label><select id="br-cat"></select></div>
       <div class="fld"><label for="br-diet">Diet</label><select id="br-diet"></select></div>
     </div>
+    <div class="brcats"><span class="ctl-label">Categories</span>
+      <div class="chips" id="br-cats" role="group" aria-label="Categories to rank; none picked means all"></div></div>
     <p class="rowhint" id="br-note" style="margin-top:0;margin-bottom:12px"></p>
     <div class="tblwrap"><table id="brtable"><thead></thead><tbody></tbody></table></div>
   </div>
@@ -1829,7 +1831,7 @@ function renderScarcity(){
 }
 
 /* ---------------- browse ---------------- */
-const brNut = document.getElementById("br-nut"), brCat = document.getElementById("br-cat");
+const brNut = document.getElementById("br-nut");
 const RANKABLE = ORDER.filter(n => n !== "kcal");
 brNut.innerHTML = `<option value="density">Overall nutrient density</option>` +
   RANKABLE.map(n => `<option value="${n}">${META[n].label}</option>`).join("");
@@ -1846,19 +1848,29 @@ function densityOf(f, grams, t){
 const MIN_KCAL_PER_100G = 10;
 document.getElementById("br-diet").innerHTML =
   Object.keys(DIETS).map(k => `<option value="${k}">${DIETS[k].label}</option>`).join("");
-// the ranking table's category list (your own foods add "My foods")
+// The ranking's categories: toggle any number; none picked means all. Your own foods add "My foods".
+const brCats = new Set();
 function fillCats(){
-  const was = brCat.value;
-  brCat.innerHTML = `<option value="">All categories</option>` +
-    [...new Set(FOODS.map(f => f.cat))].sort().map(c => `<option>${c}</option>`).join("");
-  brCat.value = [...brCat.options].some(o => o.value === was) ? was : "";
+  const cats = [...new Set(FOODS.map(f => f.cat))].sort();
+  for (const c of [...brCats]) if (!cats.includes(c)) brCats.delete(c);
+  const attr = c => c.replace(/&/g, "&amp;");          // "Grains & starches"
+  document.getElementById("br-cats").innerHTML =
+    `<button class="chip" data-brcat="" aria-pressed="${!brCats.size}">All</button>` +
+    cats.map(c => `<button class="chip" data-brcat="${attr(c)}" aria-pressed="${brCats.has(c)}">${attr(c)}</button>`).join("");
 }
 fillCats();
+document.getElementById("br-cats").addEventListener("click", e => {
+  const b = e.target.closest("[data-brcat]"); if (!b) return;
+  const c = b.dataset.brcat;
+  if (!c) brCats.clear(); else if (brCats.has(c)) brCats.delete(c); else brCats.add(c);
+  fillCats(); renderBrowse();
+  const again = document.querySelector(`#br-cats [data-brcat="${CSS.escape(c)}"]`); if (again) again.focus();
+});
 function renderBrowse(){
   const n = brNut.value, basis = document.getElementById("br-basis").value;
-  const cat = brCat.value, diet = document.getElementById("br-diet").value;
+  const diet = document.getElementById("br-diet").value;
   const allowed = new Set(pool(diet, "balanced", avoid)), t = targets(), dens = n === "density";
-  const rows = FOODS.filter(f => allowed.has(f.k) && (!cat || f.cat === cat)
+  const rows = FOODS.filter(f => allowed.has(f.k) && (!brCats.size || brCats.has(f.cat))
       && (basis !== "kcal" || f.n[IDX.kcal] >= MIN_KCAL_PER_100G)).map(f => {
     const kc = f.n[IDX.kcal];
     const grams = basis === "serv" ? f.serv : basis === "100g" ? 100 : 100 * 100 / kc;
@@ -1887,7 +1899,7 @@ function renderBrowse(){
     <td>${Math.round(r.amtKcal)}</td>
     <td class="addcell"><button data-add="${r.f.k}">Add</button></td></tr>`).join("");
 }
-["br-nut","br-basis","br-cat","br-diet"].forEach(id =>
+["br-nut","br-basis","br-diet"].forEach(id =>
   document.getElementById(id).addEventListener("change", renderBrowse));
 document.querySelector("#brtable").addEventListener("click", e => {
   const b = e.target.closest("[data-add]"); if (!b) return;

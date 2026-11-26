@@ -77,7 +77,8 @@ without crossing an upper limit. The result is split into meals.
 
 **Food ranking.** Rank every food by **overall nutrient density** (the average share of your 26
 nutrient targets it supplies, each capped at 100% so one huge value can't carry the score, with
-the nutrients it's best for) or by any single nutrient, per serving, per 100 g or per 100 kcal.
+the nutrients it's best for) or by any single nutrient, per serving, per 100 g or per 100 kcal,
+across all foods or any set of categories you pick.
 Per 100 kcal favors low-calorie foods like leafy greens; per serving shows what a normal portion
 delivers. Foods under 10 kcal per 100 g (coffee, tea) aren't ranked per 100 kcal.
 
