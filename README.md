@@ -75,7 +75,11 @@ it trims whatever portion costs no nutrient, then tries swapping a food for a le
 covers the same nutrients. Portions are rounded to 5 g (0.5 g for salt, spices and the like)
 without crossing an upper limit. The result is split into meals.
 
-**Food ranking.** Rank every food by any nutrient, per serving, per 100 g or per 100 kcal.
+**Food ranking.** Rank every food by **overall nutrient density** (the average share of your 26
+nutrient targets it supplies, each capped at 100% so one huge value can't carry the score, with
+the nutrients it's best for) or by any single nutrient, per serving, per 100 g or per 100 kcal.
+Per 100 kcal favors low-calorie foods like leafy greens; per serving shows what a normal portion
+delivers. Foods under 10 kcal per 100 g (coffee, tea) aren't ranked per 100 kcal.
 
 **Your own foods.** Copy a Nutrition Facts label (per serving, as printed) and the app converts
 it to per 100 g. Blank nutrients count as zero, like the built-in data; calories and sodium are

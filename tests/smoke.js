@@ -132,6 +132,14 @@ const DIETS = ["anything","pescatarian","vegetarian","vegan","paleo","whole30","
     ok(recent.join() === "oats,salmon", "recent order");
     ok(cleanRecent(["salmon_farmed", "toString", "oats", 5, "oats"]).join() === "salmon,oats", "cleanRecent");
     plan = {}; meals = {}; rowOrder = []; recent = [];
+    // overall nutrient density: averaged % of targets, each capped at 100%; oil scores near zero,
+    // and per 100 kcal the leaders are vegetables
+    const tg = targets(), dSp = densityOf(BY.spinach, BY.spinach.serv, tg), dOil = densityOf(BY.oliveoil, BY.oliveoil.serv, tg);
+    ok(dSp.score > 0 && dSp.score <= 100 && dOil.score < dSp.score && dSp.top.length > 0, "density score");
+    document.getElementById("br-nut").value = "density"; document.getElementById("br-basis").value = "kcal";
+    document.getElementById("br-cat").value = ""; renderBrowse();
+    const lead = [...document.querySelectorAll("#brtable tbody tr")].slice(0, 5).map(r => r.querySelector(".cat").textContent);
+    ok(lead.length === 5 && lead.filter(c => c === "Vegetables").length >= 3, "density per 100 kcal leaders: " + lead);
     // the calorie trim never removes a food the user kept
     profile = {sex: "male", age: 40, kcal: 2500};
     const seed = {oliveoil: 10, butter: 10, walnut: 200, peanut: 200, milk: 244};
