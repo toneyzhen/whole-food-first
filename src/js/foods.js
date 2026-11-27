@@ -73,8 +73,7 @@ function saveCustom(){
 }
 try {
   const arr = JSON.parse(localStorage.getItem(CUSTOM_KEY) || "[]");
-  (Array.isArray(arr) ? arr : []).map(normCustom).filter(Boolean)
-    .forEach(f => { FOODS.push(f); BY[f.k] = f; });
+  (Array.isArray(arr) ? arr : []).forEach(x => { const f = normCustom(x); if (f){ FOODS.push(f); BY[f.k] = f; } });
 } catch (e) {}
 // Drop food keys this browser doesn't know (a deleted custom food, one from another viewer, or
 // anything in a share link or backup file) and clamp amounts to the builder's 50 servings.

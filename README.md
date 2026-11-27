@@ -15,7 +15,7 @@ with calories per meal; drag a food (or use the arrow keys) to move it between m
 food can appear in more than one meal: pick the meal next to the search box and add it again. A coverage
 panel shows every target as a bar: gaps (under 85%), roughly met (85–99%, marked ≈) and
 upper-limit breaches are highlighted. A **whole-food score** gives the share of the day's calories
-from NOVA group 1 and 2 foods, and names how much of it is oil and how much sugar or honey (both
+from NOVA group 1 and 2 foods, and names how much of it is added fat (oil, butter, lard) and how much sugar or honey (both
 group 2, so they count as whole food, but they are not what the score is meant to reward).
 
 **Recent foods.** Your six most recently added foods sit in one line under the search box, one

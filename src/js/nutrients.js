@@ -160,8 +160,8 @@ function wholeFood(p){
   return all > 0 ? {pct: pc(whole), oil: pc(oil), sugar: pc(sugar)} : null;
 }
 const wholeFoodPct = p => { const w = wholeFood(p); return w && w.pct; };
-// "incl. 6% oil · 2% sugar" under the score; empty when neither is in the day
-const wholeFoodSub = w => !w ? "" : [w.oil ? w.oil + "% oil" : "", w.sugar ? w.sugar + "% sugar" : ""]
+// "incl. 6% added fat · 2% sugar" under the score (oil, butter, lard); empty when neither is in the day
+const wholeFoodSub = w => !w ? "" : [w.oil ? w.oil + "% added fat" : "", w.sugar ? w.sugar + "% sugar" : ""]
   .filter(Boolean).join(" · ").replace(/^./, s => "incl. " + s);
 // A counted nutrient at 85-99% of its target is roughly met: daily intake is noisy and food data
 // varies more than that, so it isn't shown as a shortfall.

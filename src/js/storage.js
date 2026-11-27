@@ -172,6 +172,7 @@ document.getElementById("cflist").addEventListener("click", e => {
   if (!f || !confirm(`Delete "${f.name}"? It will also be removed from today's food.`)) return;
   FOODS.splice(FOODS.indexOf(f), 1); ALLKEYS.splice(ALLKEYS.indexOf(k), 1); delete BY[k];
   delete plan[k]; delete meals[k];
+  dayLog = cleanLog(dayLog);   // logged days that used it would no longer add up
   saveCustom(); foodsChanged(); renderPlan();
 });
 
@@ -195,15 +196,16 @@ const cleanMeals = m => { const out = {};
     const v = m[k0];
     if (Number.isInteger(v) && MEALS[v]){ out[k] = v; continue; }
     if (!v || typeof v !== "object") continue;
-    const s = {}; MEAL_IDS.forEach(i => { if (+v[i] > 0) s[i] = +v[i]; });
+    const s = {}; MEAL_IDS.forEach(i => { if (+v[i] > 0 && isFinite(v[i])) s[i] = +v[i]; });
     if (Object.keys(s).length) out[k] = s;
   }
   return out; };
 function importFoods(list){
-  const fresh = (Array.isArray(list) ? list : []).slice(0, 200).map(normCustom).filter(Boolean);
-  fresh.forEach(f => { FOODS.push(f); BY[f.k] = f; ALLKEYS.push(f.k); });
-  if (fresh.length){ saveCustom(); foodsChanged(); }
-  return fresh.length;
+  let n = 0;
+  (Array.isArray(list) ? list : []).slice(0, 200).forEach(x => {
+    const f = normCustom(x); if (f){ FOODS.push(f); BY[f.k] = f; ALLKEYS.push(f.k); n++; } });
+  if (n){ saveCustom(); foodsChanged(); }
+  return n;
 }
 function shareURL(){
   const used = customFoods().filter(f => f.k in plan).map(foodRecord);
@@ -262,8 +264,9 @@ restoreFile.addEventListener("change", async () => {
       count: Object.keys(p).length});
   });
   // logged dates come back only where this browser has none
-  const back = cleanLog(d.log), nLog = Object.keys(back).filter(k => !(k in dayLog)).length;
-  dayLog = cleanLog(Object.assign(back, dayLog));
+  const had = dayLog;
+  dayLog = cleanLog(Object.assign(cleanLog(d.log), dayLog));
+  const nLog = Object.keys(dayLog).filter(k => !(k in had)).length;
   renderSaved(savedCache); persistLocal();
   const gone = left.size ? ` Left out because they are ultra-processed (NOVA group 4) and no longer in the app: ${
     [...left].join(", ")}.` : "";

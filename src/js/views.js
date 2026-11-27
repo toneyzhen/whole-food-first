@@ -124,5 +124,6 @@ function showTab(which){
   renderCoverage(); persistLocal();
   if (!document.getElementById("p-solve").hidden) renderScarcity();
   if (!document.getElementById("p-browse").hidden) renderBrowse();
+  if (!document.getElementById("p-week").hidden) renderWeek();
 }));
 

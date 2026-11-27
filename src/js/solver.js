@@ -189,8 +189,7 @@ function topUp(p, tg, ul, ks, maxFoods, diet){
     // the least carbohydrate, since under a carb cap even butter's trace can be one gram too many.
     if (room && fatsAdded < ((DIETS[diet] || {}).netCarbMax ? 3 : 2)){
       const carbPerKcal = k => netCarbOf(BY[k], 100) / BY[k].n[IDX.kcal];
-      const fat = ks.filter(k => !(k in p) && BY[k].n[IDX.kcal] > 0
-          && 9 * BY[k].n[IDX.fat] / BY[k].n[IDX.kcal] > 0.8)
+      const fat = ks.filter(k => !(k in p) && isOil(BY[k]))
         .sort((a, b) => ORDINARY.has(b) - ORDINARY.has(a) || (b === "oliveoil") - (a === "oliveoil")
           || carbPerKcal(a) - carbPerKcal(b))
         .find(k => fits(k, stepFor(k, gap)));
@@ -354,7 +353,7 @@ function evaluate(p, diet){
     proPct: tot[IDX.kcal] ? 400 * tot[IDX.protein] / tot[IDX.kcal] : 0};
 }
 function planCard(p, i, opts){
-  const e = evaluate(p, opts && opts.diet), keys = Object.keys(p), m = fillMeals(p, {});
+  const e = evaluate(p, opts && opts.diet), keys = Object.keys(p), m = fillMeals(p, opts && opts.seed ? meals : {});
   const ok = !e.short.length && !e.over.length;
   const flags = [];
   if (e.mn > D.softUl.Mn) flags.push(`Manganese ${Math.round(e.mn)} mg`);
@@ -396,7 +395,7 @@ function planCard(p, i, opts){
           ? "" : " Try raising the food limit."}</div>` : ""}
     ${flags.length ? `<div class="solvenote" style="padding-top:4px">Runs high:
       ${flags.join(", ")}.</div>` : ""}
-    <div class="btnrow"><button class="btn" data-load='${JSON.stringify(p)}'>Open in builder</button></div>
+    <div class="btnrow"><button class="btn" data-load='${JSON.stringify(p)}' data-kept="${opts && opts.seed ? 1 : ""}">Open in builder</button></div>
   </div>`;
 }
 function readSolveOpts(){
@@ -429,7 +428,9 @@ document.getElementById("btn-solve5").addEventListener("click", () => {
 });
 document.getElementById("solveout").addEventListener("click", e => {
   const b = e.target.closest("[data-load]"); if (!b) return;
-  plan = knownOnly(JSON.parse(b.dataset.load)); meals = {}; rowOrder = [];
+  // built on the current day: keep its meals (fillMeals rescales them and places the new foods)
+  plan = knownOnly(JSON.parse(b.dataset.load));
+  if (!b.dataset.kept){ meals = {}; rowOrder = []; }
   noteRemoved({}); renderPlan(); showTab("build");
   window.scrollTo({top: 0, behavior: "smooth"});
 });

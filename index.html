@@ -723,8 +723,7 @@ function saveCustom(){
 }
 try {
   const arr = JSON.parse(localStorage.getItem(CUSTOM_KEY) || "[]");
-  (Array.isArray(arr) ? arr : []).map(normCustom).filter(Boolean)
-    .forEach(f => { FOODS.push(f); BY[f.k] = f; });
+  (Array.isArray(arr) ? arr : []).forEach(x => { const f = normCustom(x); if (f){ FOODS.push(f); BY[f.k] = f; } });
 } catch (e) {}
 // Drop food keys this browser doesn't know (a deleted custom food, one from another viewer, or
 // anything in a share link or backup file) and clamp amounts to the builder's 50 servings.
@@ -1002,8 +1001,8 @@ function wholeFood(p){
   return all > 0 ? {pct: pc(whole), oil: pc(oil), sugar: pc(sugar)} : null;
 }
 const wholeFoodPct = p => { const w = wholeFood(p); return w && w.pct; };
-// "incl. 6% oil · 2% sugar" under the score; empty when neither is in the day
-const wholeFoodSub = w => !w ? "" : [w.oil ? w.oil + "% oil" : "", w.sugar ? w.sugar + "% sugar" : ""]
+// "incl. 6% added fat · 2% sugar" under the score (oil, butter, lard); empty when neither is in the day
+const wholeFoodSub = w => !w ? "" : [w.oil ? w.oil + "% added fat" : "", w.sugar ? w.sugar + "% sugar" : ""]
   .filter(Boolean).join(" · ").replace(/^./, s => "incl. " + s);
 // A counted nutrient at 85-99% of its target is roughly met: daily intake is noisy and food data
 // varies more than that, so it isn't shown as a shortfall.
@@ -1616,8 +1615,7 @@ function topUp(p, tg, ul, ks, maxFoods, diet){
     // the least carbohydrate, since under a carb cap even butter's trace can be one gram too many.
     if (room && fatsAdded < ((DIETS[diet] || {}).netCarbMax ? 3 : 2)){
       const carbPerKcal = k => netCarbOf(BY[k], 100) / BY[k].n[IDX.kcal];
-      const fat = ks.filter(k => !(k in p) && BY[k].n[IDX.kcal] > 0
-          && 9 * BY[k].n[IDX.fat] / BY[k].n[IDX.kcal] > 0.8)
+      const fat = ks.filter(k => !(k in p) && isOil(BY[k]))
         .sort((a, b) => ORDINARY.has(b) - ORDINARY.has(a) || (b === "oliveoil") - (a === "oliveoil")
           || carbPerKcal(a) - carbPerKcal(b))
         .find(k => fits(k, stepFor(k, gap)));
@@ -1781,7 +1779,7 @@ function evaluate(p, diet){
     proPct: tot[IDX.kcal] ? 400 * tot[IDX.protein] / tot[IDX.kcal] : 0};
 }
 function planCard(p, i, opts){
-  const e = evaluate(p, opts && opts.diet), keys = Object.keys(p), m = fillMeals(p, {});
+  const e = evaluate(p, opts && opts.diet), keys = Object.keys(p), m = fillMeals(p, opts && opts.seed ? meals : {});
   const ok = !e.short.length && !e.over.length;
   const flags = [];
   if (e.mn > D.softUl.Mn) flags.push(`Manganese ${Math.round(e.mn)} mg`);
@@ -1823,7 +1821,7 @@ function planCard(p, i, opts){
           ? "" : " Try raising the food limit."}</div>` : ""}
     ${flags.length ? `<div class="solvenote" style="padding-top:4px">Runs high:
       ${flags.join(", ")}.</div>` : ""}
-    <div class="btnrow"><button class="btn" data-load='${JSON.stringify(p)}'>Open in builder</button></div>
+    <div class="btnrow"><button class="btn" data-load='${JSON.stringify(p)}' data-kept="${opts && opts.seed ? 1 : ""}">Open in builder</button></div>
   </div>`;
 }
 function readSolveOpts(){
@@ -1856,7 +1854,9 @@ document.getElementById("btn-solve5").addEventListener("click", () => {
 });
 document.getElementById("solveout").addEventListener("click", e => {
   const b = e.target.closest("[data-load]"); if (!b) return;
-  plan = knownOnly(JSON.parse(b.dataset.load)); meals = {}; rowOrder = [];
+  // built on the current day: keep its meals (fillMeals rescales them and places the new foods)
+  plan = knownOnly(JSON.parse(b.dataset.load));
+  if (!b.dataset.kept){ meals = {}; rowOrder = []; }
   noteRemoved({}); renderPlan(); showTab("build");
   window.scrollTo({top: 0, behavior: "smooth"});
 });
@@ -2022,6 +2022,7 @@ function showTab(which){
   renderCoverage(); persistLocal();
   if (!document.getElementById("p-solve").hidden) renderScarcity();
   if (!document.getElementById("p-browse").hidden) renderBrowse();
+  if (!document.getElementById("p-week").hidden) renderWeek();
 }));
 
 /* ---------------- persistence ---------------- */
@@ -2198,6 +2199,7 @@ document.getElementById("cflist").addEventListener("click", e => {
   if (!f || !confirm(`Delete "${f.name}"? It will also be removed from today's food.`)) return;
   FOODS.splice(FOODS.indexOf(f), 1); ALLKEYS.splice(ALLKEYS.indexOf(k), 1); delete BY[k];
   delete plan[k]; delete meals[k];
+  dayLog = cleanLog(dayLog);   // logged days that used it would no longer add up
   saveCustom(); foodsChanged(); renderPlan();
 });
 
@@ -2221,15 +2223,16 @@ const cleanMeals = m => { const out = {};
     const v = m[k0];
     if (Number.isInteger(v) && MEALS[v]){ out[k] = v; continue; }
     if (!v || typeof v !== "object") continue;
-    const s = {}; MEAL_IDS.forEach(i => { if (+v[i] > 0) s[i] = +v[i]; });
+    const s = {}; MEAL_IDS.forEach(i => { if (+v[i] > 0 && isFinite(v[i])) s[i] = +v[i]; });
     if (Object.keys(s).length) out[k] = s;
   }
   return out; };
 function importFoods(list){
-  const fresh = (Array.isArray(list) ? list : []).slice(0, 200).map(normCustom).filter(Boolean);
-  fresh.forEach(f => { FOODS.push(f); BY[f.k] = f; ALLKEYS.push(f.k); });
-  if (fresh.length){ saveCustom(); foodsChanged(); }
-  return fresh.length;
+  let n = 0;
+  (Array.isArray(list) ? list : []).slice(0, 200).forEach(x => {
+    const f = normCustom(x); if (f){ FOODS.push(f); BY[f.k] = f; ALLKEYS.push(f.k); n++; } });
+  if (n){ saveCustom(); foodsChanged(); }
+  return n;
 }
 function shareURL(){
   const used = customFoods().filter(f => f.k in plan).map(foodRecord);
@@ -2288,8 +2291,9 @@ restoreFile.addEventListener("change", async () => {
       count: Object.keys(p).length});
   });
   // logged dates come back only where this browser has none
-  const back = cleanLog(d.log), nLog = Object.keys(back).filter(k => !(k in dayLog)).length;
-  dayLog = cleanLog(Object.assign(back, dayLog));
+  const had = dayLog;
+  dayLog = cleanLog(Object.assign(cleanLog(d.log), dayLog));
+  const nLog = Object.keys(dayLog).filter(k => !(k in had)).length;
   renderSaved(savedCache); persistLocal();
   const gone = left.size ? ` Left out because they are ultra-processed (NOVA group 4) and no longer in the app: ${
     [...left].join(", ")}.` : "";

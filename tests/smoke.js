@@ -127,7 +127,7 @@ const DIETS = ["anything","pescatarian","vegetarian","vegan","paleo","whole30","
     ok(wholeFoodPct({}) === null, "whole-food score of an empty day");
     // oil and sugar are NOVA 2, so they count as whole food; the score names their share apart
     const wo = wholeFood({oats: 100, oliveoil: 10, honey: 21});
-    ok(wo.oil > 0 && wo.sugar > 0 && wo.pct === 100 && /oil/.test(wholeFoodSub(wo)) && /sugar/.test(wholeFoodSub(wo)),
+    ok(wo.oil > 0 && wo.sugar > 0 && wo.pct === 100 && /added fat/.test(wholeFoodSub(wo)) && /sugar/.test(wholeFoodSub(wo)),
        "oil and sugar shares: " + JSON.stringify(wo));
     // the week log: an unchanged day isn't logged, a changed one is under today's date, and a
     // stored log keeps only real dates and known foods
@@ -142,6 +142,22 @@ const DIETS = ["anything","pescatarian","vegetarian","vegan","paleo","whole30","
     ok(document.querySelectorAll("#wktable tbody tr").length === TARGETS
        && document.querySelectorAll("#wktable thead th").length === 9, "week table shape");
     showTab("build"); plan = JSON.parse(was); dayLog = logWas; planAtStart = null;
+    // your own foods from a link or file: a key listed twice comes in once (a second copy outlived
+    // deleting the first and broke search, suggestions and the solver), and deleting a food also
+    // takes it out of the week log (a logged day naming it broke the Week table)
+    const cf = {k: "c-dup1", name: "Dup", cls: "plant", serv: 30, n: new Array(ORDER.length).fill(1)};
+    ok(importFoods([cf, Object.assign({}, cf)]) === 1 && FOODS.filter(f => f.k === "c-dup1").length === 1,
+       "a food listed twice was imported twice");
+    const savedLog = dayLog, savedPlan = plan, realConfirm = window.confirm;
+    dayLog = {"2026-01-05": {"c-dup1": 30, oats: 40}}; plan = {oats: 40}; window.confirm = () => true;
+    document.querySelector('[data-cfdel="c-dup1"]').click();
+    window.confirm = realConfirm;
+    ok(!BY["c-dup1"] && !FOODS.some(f => f.k === "c-dup1") && JSON.stringify(dayLog) === '{"2026-01-05":{"oats":40}}',
+       "deleting your own food left it behind: " + JSON.stringify(dayLog));
+    let weekOk = true; try { renderWeek(); } catch (e) { weekOk = false; }
+    ok(weekOk, "week table after deleting a food");
+    ok(Object.keys(cleanMeals({oats: {"0": 1e999, "1": 40}}).oats).join() === "1", "cleanMeals let Infinity through");
+    dayLog = savedLog; plan = savedPlan;
     // search: every word must match, and the plain cooked everyday food ranks first
     search.value = "chicken breast"; runSearch();
     ok(hits.length && hits.every(f => /chicken/i.test(f.name) && /breast/i.test(f.name)) &&
