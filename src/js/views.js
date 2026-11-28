@@ -87,12 +87,16 @@ function renderWeek(){
   const cell = p => p === null ? `<td class="none">&mdash;</td>`
     : p >= 99.5 ? `<td>${Math.round(p)}%</td>`
     : `<td class="${p >= ROUGHLY ? "near" : "gap"}">${p >= ROUGHLY ? "\u2248" : ""}${Math.round(p)}%</td>`;
-  const avgs = ns.map(n => logged.length ? pct(logged.reduce((a, d) => a + tot[d][IDX[n]], 0) / logged.length, n) : null);
+  // today's day may still be in progress (breakfast only at 9 am), so it counts toward the average
+  // only when nothing earlier is logged
+  const past = logged.filter(d => d !== days[0]), avgDays = past.length ? past : logged;
+  const avgs = ns.map(n => avgDays.length ? pct(avgDays.reduce((a, d) => a + tot[d][IDX[n]], 0) / avgDays.length, n) : null);
   const met = avgs.filter(p => p !== null && p >= 99.5).length,
         near = avgs.filter(p => p !== null && p < 99.5 && p >= ROUGHLY).length;
   document.getElementById("wk-note").textContent = !logged.length
     ? "Nothing logged yet. Each date you change your day in Build a day, it is logged here."
-    : `On average over ${logged.length} logged day${logged.length === 1 ? "" : "s"}: ${met} of ${ns.length} targets met`
+    : `On average over ${avgDays.length} logged day${avgDays.length === 1 ? "" : "s"}${
+        avgDays.length < logged.length ? " before today" : ""}: ${met} of ${ns.length} targets met`
       + (near ? `, ${near} roughly (85% or more)` : "")
       + ". The body stores several nutrients (vitamins A, D, B12), so the week's average matters more than any one day.";
   const head = d => { const x = new Date(d + "T12:00"); return `${x.toLocaleDateString(undefined, {weekday: "short"})} ${x.getDate()}`; };

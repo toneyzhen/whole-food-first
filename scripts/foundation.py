@@ -14,6 +14,7 @@ foods, put new matches in foundation_matches.json first. Then run validate.py, b
 smoke test, and compare the solver sweep with CLAUDE.md.
 """
 import json, pathlib, re, sys, zipfile
+from validate import problems   # the same checks validate.py runs (scripts/ is on the path when run)
 
 ROOT = pathlib.Path(__file__).parent.parent
 # Foundation nutrient numbers for each app nutrient, in order of preference; a tuple is summed
@@ -45,18 +46,6 @@ def foundation(zip_path):
                 elif a in v: vals[k] = v[a]; break
         out[str(f["fdcId"])] = (f["description"], vals)
     return out
-
-def problems(f, O):
-    """The validate.py checks for one food."""
-    n = dict(zip(O, f["n"])); e = []
-    if n["fiber"] > n["carb"] + 1e-9: e.append("fiber > carb")
-    if f["cls"] != "plant" and n["fiber"] > 0: e.append("fiber in an animal food")
-    if f["cls"] == "plant" and n["B12"] > 0.1 and "fortified" not in f["tags"].split() \
-       and f["k"] not in ("tempeh", "miso"): e.append("B12 in an unfortified plant")
-    if n["kcal"] >= 5:
-        r = (4*n["protein"] + 9*n["fat"] + 4*(n["carb"] - n["fiber"]) + 2*n["fiber"]) / n["kcal"]
-        if not 0.62 <= r <= 1.45: e.append(f"Atwater ratio {r:.2f}")
-    return e
 
 def main(zip_path, write):
     release = re.search(r"(\d{4}-\d{2})-\d{2}", pathlib.Path(zip_path).name)

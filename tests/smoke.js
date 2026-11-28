@@ -158,6 +158,25 @@ const DIETS = ["anything","pescatarian","vegetarian","vegan","paleo","whole30","
     ok(weekOk, "week table after deleting a food");
     ok(Object.keys(cleanMeals({oats: {"0": 1e999, "1": 40}}).oats).join() === "1", "cleanMeals let Infinity through");
     dayLog = savedLog; plan = savedPlan;
+    // restoring a backup only adds: a saved day already here is skipped, a new one is added, this
+    // browser's logged dates win over the file's, and only the newest LOG_DAYS dates are kept
+    const sc0 = savedCache, log0 = dayLog, fileLog = {};
+    for (let i = 1; i <= 30; i++) fileLog["2026-01-" + String(i).padStart(2, "0")] = {oats: 10 * i};
+    fileLog["2026-02-10"] = {salmon: 113};
+    savedCache = [{id: "local-1", name: "Mine", plan: {oats: 40}, meals: {}, order: [], count: 1}];
+    dayLog = {"2026-02-10": {egg: 50}};
+    const rm = restoreBackup({app: "the-complete-day", log: fileLog,
+      saved: [{name: "Mine", plan: {oats: 40}}, {name: "New", plan: {salmon: 113}}]});
+    ok(savedCache.map(s => s.name).join() === "Mine,New" && savedCache[0].id === "local-1"
+       && Object.keys(dayLog).length === LOG_DAYS && dayLog["2026-02-10"].egg === 50 && !dayLog["2026-01-03"]
+       && /1 saved day, 27 logged days/.test(rm), "restore: " + rm + " " + JSON.stringify(Object.keys(dayLog)));
+    ok(/isn't a backup/.test(restoreBackup({app: "other"})), "restore accepts another app's file");
+    // the week average leaves out today (maybe only breakfast so far) once earlier days are logged
+    const y = new Date(); y.setDate(y.getDate() - 1);
+    dayLog = {[dateKey()]: {oats: 40}, [dateKey(y)]: {salmon: 113}}; showTab("week");
+    const kc = [...document.querySelector("#wktable tbody tr").children].map(td => td.textContent);
+    ok(kc[1] === kc[3] && kc[1] !== kc[2], "week average counts today: " + kc);
+    showTab("build"); savedCache = sc0; dayLog = log0;
     // search: every word must match, and the plain cooked everyday food ranks first
     search.value = "chicken breast"; runSearch();
     ok(hits.length && hits.every(f => /chicken/i.test(f.name) && /breast/i.test(f.name)) &&
@@ -187,6 +206,14 @@ const DIETS = ["anything","pescatarian","vegetarian","vegan","paleo","whole30","
     const cats = new Set([...document.querySelectorAll("#brtable tbody .cat")].map(td => td.textContent));
     ok(cats.size === 2 && cats.has("Fruit") && cats.has("Eggs"), "two categories at once: " + [...cats]);
     brCats.clear(); renderBrowse();
+    // "Keep my current day": opening the result keeps your meals (oats you put at lunch stay there)
+    profile = {sex: "male", age: 40, kcal: 2500};
+    plan = {oats: 60, salmon: 113}; meals = {oats: {1: 60}, salmon: {2: 113}}; rowOrder = [];
+    const so = {diet: "anything", maxFoods: 10, style: "balanced", seed: plan, avoid: new Set()};
+    document.getElementById("solveout").innerHTML = planCard(solveDay(so), 0, so);
+    document.querySelector("#solveout [data-load]").click();
+    ok(meals.oats[1] > 0 && !meals.oats[0] && meals.salmon[2] > 0 && Object.keys(plan).length > 2,
+       "kept day lost its meals: " + JSON.stringify({oats: meals.oats, salmon: meals.salmon}));
     // the calorie trim never removes a food the user kept
     profile = {sex: "male", age: 40, kcal: 2500};
     const seed = {oliveoil: 10, butter: 10, walnut: 200, peanut: 200, milk: 244};

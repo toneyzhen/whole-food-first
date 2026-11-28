@@ -1985,12 +1985,16 @@ function renderWeek(){
   const cell = p => p === null ? `<td class="none">&mdash;</td>`
     : p >= 99.5 ? `<td>${Math.round(p)}%</td>`
     : `<td class="${p >= ROUGHLY ? "near" : "gap"}">${p >= ROUGHLY ? "\u2248" : ""}${Math.round(p)}%</td>`;
-  const avgs = ns.map(n => logged.length ? pct(logged.reduce((a, d) => a + tot[d][IDX[n]], 0) / logged.length, n) : null);
+  // today's day may still be in progress (breakfast only at 9 am), so it counts toward the average
+  // only when nothing earlier is logged
+  const past = logged.filter(d => d !== days[0]), avgDays = past.length ? past : logged;
+  const avgs = ns.map(n => avgDays.length ? pct(avgDays.reduce((a, d) => a + tot[d][IDX[n]], 0) / avgDays.length, n) : null);
   const met = avgs.filter(p => p !== null && p >= 99.5).length,
         near = avgs.filter(p => p !== null && p < 99.5 && p >= ROUGHLY).length;
   document.getElementById("wk-note").textContent = !logged.length
     ? "Nothing logged yet. Each date you change your day in Build a day, it is logged here."
-    : `On average over ${logged.length} logged day${logged.length === 1 ? "" : "s"}: ${met} of ${ns.length} targets met`
+    : `On average over ${avgDays.length} logged day${avgDays.length === 1 ? "" : "s"}${
+        avgDays.length < logged.length ? " before today" : ""}: ${met} of ${ns.length} targets met`
       + (near ? `, ${near} roughly (85% or more)` : "")
       + ". The body stores several nutrients (vitamins A, D, B12), so the week's average matters more than any one day.";
   const head = d => { const x = new Date(d + "T12:00"); return `${x.toLocaleDateString(undefined, {weekday: "short"})} ${x.getDate()}`; };
@@ -2271,8 +2275,13 @@ restoreFile.addEventListener("change", async () => {
   if (!file) return;
   if (file.size > 2e6) return msg("That file is too large to be a backup from this app.");
   let d; try { d = JSON.parse(await file.text()); } catch (e) { d = null; }
+  msg(restoreBackup(d));
+});
+// A backup file (untrusted: it can come from anywhere) adds saved days, your own foods and logged
+// days; nothing already here is replaced. Returns the message to show.
+function restoreBackup(d){
   // the app id stays "the-complete-day" (the old name), so backups from before the rename still restore
-  if (!d || d.app !== "the-complete-day") return msg("That isn't a backup file from Whole Food First.");
+  if (!d || d.app !== "the-complete-day") return "That isn't a backup file from Whole Food First.";
   const nFoods = importFoods(d.foods);   // first, so saved days that use them survive knownOnly
   // Restoring adds; it never overwrites. The backup's current day comes back as a saved day.
   const incoming = (Array.isArray(d.saved) ? d.saved.slice(0, 500) : [])
@@ -2297,9 +2306,9 @@ restoreFile.addEventListener("change", async () => {
   renderSaved(savedCache); persistLocal();
   const gone = left.size ? ` Left out because they are ultra-processed (NOVA group 4) and no longer in the app: ${
     [...left].join(", ")}.` : "";
-  msg((nDays || nFoods || nLog ? `Restored ${nDays} saved day${nDays === 1 ? "" : "s"}, ${nLog} logged day${nLog === 1 ? "" : "s"} and ${nFoods} food${nFoods === 1 ? "" : "s"} of your own.`
-      : left.size ? "Nothing restored." : "Nothing new in that file: everything in it is already here.") + gone);
-});
+  return (nDays || nFoods || nLog ? `Restored ${nDays} saved day${nDays === 1 ? "" : "s"}, ${nLog} logged day${nLog === 1 ? "" : "s"} and ${nFoods} food${nFoods === 1 ? "" : "s"} of your own.`
+      : left.size ? "Nothing restored." : "Nothing new in that file: everything in it is already here.") + gone;
+}
 
 /* ---------------- boot ---------------- */
 const addMealSel = document.getElementById("addmeal");

@@ -244,8 +244,13 @@ restoreFile.addEventListener("change", async () => {
   if (!file) return;
   if (file.size > 2e6) return msg("That file is too large to be a backup from this app.");
   let d; try { d = JSON.parse(await file.text()); } catch (e) { d = null; }
+  msg(restoreBackup(d));
+});
+// A backup file (untrusted: it can come from anywhere) adds saved days, your own foods and logged
+// days; nothing already here is replaced. Returns the message to show.
+function restoreBackup(d){
   // the app id stays "the-complete-day" (the old name), so backups from before the rename still restore
-  if (!d || d.app !== "the-complete-day") return msg("That isn't a backup file from Whole Food First.");
+  if (!d || d.app !== "the-complete-day") return "That isn't a backup file from Whole Food First.";
   const nFoods = importFoods(d.foods);   // first, so saved days that use them survive knownOnly
   // Restoring adds; it never overwrites. The backup's current day comes back as a saved day.
   const incoming = (Array.isArray(d.saved) ? d.saved.slice(0, 500) : [])
@@ -270,7 +275,7 @@ restoreFile.addEventListener("change", async () => {
   renderSaved(savedCache); persistLocal();
   const gone = left.size ? ` Left out because they are ultra-processed (NOVA group 4) and no longer in the app: ${
     [...left].join(", ")}.` : "";
-  msg((nDays || nFoods || nLog ? `Restored ${nDays} saved day${nDays === 1 ? "" : "s"}, ${nLog} logged day${nLog === 1 ? "" : "s"} and ${nFoods} food${nFoods === 1 ? "" : "s"} of your own.`
-      : left.size ? "Nothing restored." : "Nothing new in that file: everything in it is already here.") + gone);
-});
+  return (nDays || nFoods || nLog ? `Restored ${nDays} saved day${nDays === 1 ? "" : "s"}, ${nLog} logged day${nLog === 1 ? "" : "s"} and ${nFoods} food${nFoods === 1 ? "" : "s"} of your own.`
+      : left.size ? "Nothing restored." : "Nothing new in that file: everything in it is already here.") + gone;
+}
 
